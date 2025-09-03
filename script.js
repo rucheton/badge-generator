@@ -672,7 +672,7 @@ class BadgeGenerator {
         let imageHTML = '';
         if (showPicture && picture) {
             // Show the actual image when checkbox is checked and image exists
-            imageHTML = `<img src="${picture}" alt="Photo de ${name}" class="badge-image" style="width: ${this.settings.pictureDiameter}px; height: ${this.settings.pictureDiameter}px; object-fit: cover; border-radius: 50%;">`;
+            imageHTML = `<img src="${picture}" alt="Photo de ${name}" class="badge-image" style="width: ${this.settings.pictureDiameter}px; height: ${this.settings.pictureDiameter}px; object-fit: cover; border-radius: 50%; border: 2px solid ${this.settings.borderColor};">`;
         } else if (showPicture && !picture) {
             // Show emoji avatar when checkbox is checked but no image exists
             let avatarEmoji;
