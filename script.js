@@ -667,7 +667,15 @@ class BadgeGenerator {
         
         // Calculate required width based on name length and font size
         const requiredWidth = this.calculateRequiredWidth(name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter);
-        const badgeWidth = Math.max(this.settings.width, requiredWidth);
+        
+        // Add image space if we're in horizontal mode and actually showing an image
+        let finalWidth = requiredWidth;
+        if (this.settings.picturePosition === 'left' && showPicture && picture) {
+            const imageSpace = (this.settings.pictureDiameter / 37.7952755906) + 1.5; // 1.5cm gap
+            finalWidth += imageSpace;
+        }
+        
+        const badgeWidth = Math.max(this.settings.width, finalWidth);
         
         let imageHTML = '';
         if (showPicture && picture) {
@@ -694,19 +702,24 @@ class BadgeGenerator {
         
         const badgeStyle = `
             width: ${badgeWidth}cm;
-            height: ${this.settings.height}cm;
+            height: ${this.settings.picturePosition === 'left' ? 'auto' : `${this.settings.height}cm`};
+            min-height: ${this.settings.picturePosition === 'left' ? '80px' : `${this.settings.height}cm`};
             border: ${this.settings.borderWidth}px solid ${this.settings.borderColor};
             border-radius: ${this.settings.borderRadius}px;
             font-size: ${this.settings.fontSize}px;
+            padding: ${this.settings.picturePosition === 'left' ? '8px' : '15px'};
         `;
         
         if (this.settings.picturePosition === 'left') {
+            // For horizontal badges, check if we need to center the name when no image
+            const shouldCenterName = !showPicture || !picture;
+            const badgeClass = shouldCenterName ? 'badge badge-horizontal badge-centered' : 'badge badge-horizontal';
+            const contentStyle = shouldCenterName ? 'justify-content: center; text-align: center;' : '';
+            
             return `
-                <div class="badge badge-horizontal" style="${badgeStyle}">
-                    <div class="badge-image-container">
-                        ${imageHTML}
-                    </div>
-                    <div class="badge-content-horizontal">
+                <div class="${badgeClass}" style="${badgeStyle}">
+                    ${shouldCenterName ? '' : '<div class="badge-image-container">' + imageHTML + '</div>'}
+                    <div class="badge-content-horizontal" style="${contentStyle}">
                         <div class="badge-name">${formattedName}</div>
                     </div>
                 </div>
@@ -733,8 +746,10 @@ class BadgeGenerator {
         const nameWidthCm = estimatedNameWidth / 37.7952755906;
         
         // Add padding and margins
-        const padding = 2; // 2cm total padding (1cm on each side)
-        const imageSpace = picturePosition === 'left' ? (pictureDiameter / 37.7952755906) + 1 : 0; // 1cm gap for left position
+        const padding = picturePosition === 'left' ? 1.5 : 2; // Less padding for horizontal badges
+        
+        // Only add image space if we're in horizontal mode (image space is handled dynamically in createBadgeHTML)
+        const imageSpace = 0; // We'll handle this dynamically based on actual image presence
         
         const requiredWidth = nameWidthCm + padding + imageSpace;
         
@@ -941,10 +956,16 @@ class BadgeGenerator {
                 badgeElement.innerHTML = this.createBadgeHTML(badge);
                 badgeElement.style.textAlign = 'center';
                 badgeElement.style.verticalAlign = 'middle';
-                // badgeElement.style.background = 'white';
                 badgeElement.style.width = '100%';
-                badgeElement.style.height = '100%';
                 badgeElement.style.boxSizing = 'border-box';
+                
+                // Adjust height for horizontal badges
+                if (this.settings.picturePosition === 'left') {
+                    badgeElement.style.height = 'auto';
+                    badgeElement.style.minHeight = '80px';
+                } else {
+                    badgeElement.style.height = '100%';
+                }
                 
                 // Get the calculated width from the badge element
                 const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter);
@@ -960,25 +981,32 @@ class BadgeGenerator {
             
             const pageWidth = pdf.internal.pageSize.getWidth();
             const pageHeight = pdf.internal.pageSize.getHeight();
-            const badgeWidth = this.settings.width;
-            const badgeHeight = this.settings.height;
+            const defaultBadgeWidth = this.settings.width;
+            const defaultBadgeHeight = this.settings.height;
 
             let currentY = 1;
             let currentX = 1;
 
             for (let i = 0; i < badges.length; i++) {
+                const badge = badges[i];
+                const badgeElement = pdfContainer.children[i];
+                
+                // Calculate the actual width and height needed for this badge
+                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter);
+                const badgeWidth = Math.max(defaultBadgeWidth, calculatedWidth);
+                
+                // Adjust height for horizontal badges
+                let badgeHeight = defaultBadgeHeight;
+                if (this.settings.picturePosition === 'left') {
+                    // For horizontal badges, use a more appropriate height
+                    badgeHeight = Math.max(4, defaultBadgeHeight * 0.8); // Reduce height by 20% but minimum 4cm
+                }
+                
                 if (currentY + badgeHeight > pageHeight - 1) {
                     pdf.addPage();
                     currentY = 1;
                     currentX = 1;
                 }
-
-                const badge = badges[i];
-                const badgeElement = pdfContainer.children[i];
-                
-                // Calculate the actual width needed for this badge
-                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter);
-                const badgeWidth = Math.max(this.settings.width, calculatedWidth);
 
                 if (currentX + badgeWidth > pageWidth - 1) {
                     currentY += badgeHeight + 0.5;
