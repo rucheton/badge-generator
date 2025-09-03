@@ -347,6 +347,20 @@ th {
     align-items: center;
     justify-content: flex-start;
     gap: 15px;
+    height: auto;
+    min-height: 80px;
+    max-width: none; /* Allow horizontal badges to expand beyond 350px */
+}
+
+.badge-centered {
+    justify-content: center !important;
+    text-align: center !important;
+}
+
+.badge-centered .badge-content-horizontal {
+    justify-content: center;
+    text-align: center;
+    width: 100%;
 }
 
 .badge-content-horizontal {
@@ -356,6 +370,8 @@ th {
     height: 100%;
     flex: 1;
     min-width: 0;
+    padding: 0;
+    overflow: visible;
 }
 
 .badge-image-container {
@@ -374,7 +390,6 @@ th {
     object-fit: cover;
     margin: 0 auto 10px;
     display: block;
-    border: 2px solid;
 }
 
 .badge-name {
@@ -393,6 +408,7 @@ th {
     margin: 0;
     overflow: visible;
     text-overflow: clip;
+    flex-shrink: 0; /* Prevent name from shrinking */
 }
 
 .badge-name .first-letter {
