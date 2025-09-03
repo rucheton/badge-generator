@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Badge Generator</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="language-selector">
+                <button class="lang-btn active" data-lang="fr">Français</button>
+                <button class="lang-btn" data-lang="en">English</button>
+            </div>
+            <h1>🎖️ Générateur de Badges</h1>
+            <p>Créez de beaux badges imprimables pour vos événements</p>
+        </header>
+
+        <div class="main-content">
+            <div class="settings-panel">
+                <h2>Paramètres</h2>
+                
+                <div class="setting-group">
+                    <label for="badgeWidth">Largeur du Badge (cm):</label>
+                    <input type="number" id="badgeWidth" value="8" min="5" max="15" step="0.5">
+                </div>
+
+                <div class="setting-group">
+                    <label for="badgeHeight">Hauteur du Badge (cm):</label>
+                    <input type="number" id="badgeHeight" value="6" min="4" max="12" step="0.5">
+                </div>
+
+                <div class="setting-group">
+                    <label for="borderColor">Couleur de la Bordure:</label>
+                    <input type="color" id="borderColor" value="#4CAF50">
+                </div>
+
+                <div class="setting-group">
+                    <label for="borderRadius">Rayon de la Bordure (px):</label>
+                    <input type="number" id="borderRadius" value="15" min="5" max="30">
+                </div>
+
+                <div class="setting-group">
+                    <label for="borderWidth">Épaisseur de la Bordure (px):</label>
+                    <input type="number" id="borderWidth" value="10" min="1" max="30">
+                </div>
+
+                <div class="setting-group">
+                    <label for="fontSize">Taille de la Police (px):</label>
+                    <input type="number" id="fontSize" value="18" min="12" max="72" step="1">
+                </div>
+
+                <div class="setting-group">
+                    <label for="firstLetterColor">Couleur de la Première Lettre:</label>
+                    <input type="color" id="firstLetterColor" value="#667eea">
+                </div>
+
+                <div class="setting-group">
+                    <label for="firstLetterSizeRatio">Ratio de Taille de la Première Lettre:</label>
+                    <input type="number" id="firstLetterSizeRatio" value="1.2" min="1.0" max="3.0" step="0.1">
+                </div>
+
+                <div class="setting-group">
+                    <label for="picturePosition">Position de l'Image:</label>
+                    <select id="picturePosition">
+                        <option value="top">Haut (au-dessus du nom)</option>
+                        <option value="left">Gauche (à côté du nom)</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="pictureDiameter">Diamètre de l'Image (px):</label>
+                    <input type="number" id="pictureDiameter" value="80" min="40" max="200" step="5">
+                </div>
+            </div>
+
+            <div class="input-panel">
+                <h2>Données des Badges</h2>
+                
+                <div class="input-controls">
+                    <button id="clearAll" class="btn btn-secondary">Tout Effacer</button>
+                    <button id="importCSV" class="btn btn-secondary">Importer CSV</button>
+                </div>
+
+                <div class="table-container">
+                    <table id="badgeTable">
+                        <thead>
+                            <tr>
+                                <th>Prénom</th>
+                                <th>Image</th>
+                                <th>Genre</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="badgeTableBody">
+                            <tr>
+                                <td><input type="text" class="name-input" placeholder="Entrez le prénom"></td>
+                                <td>
+                                    <div class="image-input-container">
+                                        <input type="checkbox" class="show-picture-checkbox" checked>
+                                        <input type="file" class="picture-input" accept="image/*">
+                                        <div class="image-preview"></div>
+                                    </div>
+                                </td>
+                                <td><select class="gender-select"><option value="genderless">Sans Genre</option><option value="boy">Garçon</option><option value="girl">Fille</option></select></td>
+                                <td><button class="btn btn-danger remove-row">Supprimer</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="generate-section">
+                    <button id="generatePDF" class="btn btn-success">Générer PDF</button>
+                    <div class="preview-info">
+                        <span id="badgeCount">1 badge</span> • 
+                        <span id="pageCount">1 page</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <h2>Aperçu</h2>
+                <div id="badgePreview" class="badge-preview"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>
