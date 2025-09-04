@@ -178,6 +178,9 @@ class BadgeGenerator {
         document.getElementById('importCSV').addEventListener('click', () => this.importCSV());
         document.getElementById('generatePDF').addEventListener('click', () => this.generatePDF());
 
+        // Drop zone events
+        this.setupDropZone();
+
         // Initial row events
         this.bindRowEvents(document.querySelector('#badgeTableBody tr'));
     }
@@ -489,19 +492,6 @@ class BadgeGenerator {
         }
     }
 
-    restorePictureData(row, pictureData) {
-        // Store the picture data in the row for later use
-        row.dataset.picture = pictureData;
-        
-        // Show image preview if picture data exists
-        if (pictureData) {
-            const previewDiv = row.querySelector('.image-preview');
-            if (previewDiv) {
-                previewDiv.innerHTML = `<img src="${pictureData}" alt="Aperçu">`;
-                previewDiv.classList.add('has-image');
-            }
-        }
-    }
 
     makeImageSquare(imageData, callback) {
         const img = new Image();
@@ -528,6 +518,138 @@ class BadgeGenerator {
             callback(squareImageData);
         };
         img.src = imageData;
+    }
+
+    setupDropZone() {
+        const dropZone = document.getElementById('dropZone');
+        
+        // Prevent default drag behaviors
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, this.preventDefaults, false);
+            document.body.addEventListener(eventName, this.preventDefaults, false);
+        });
+
+        // Highlight drop zone when item is dragged over it
+        ['dragenter', 'dragover'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.add('drag-over'), false);
+        });
+
+        ['dragleave', 'drop'].forEach(eventName => {
+            dropZone.addEventListener(eventName, () => dropZone.classList.remove('drag-over'), false);
+        });
+
+        // Handle dropped files
+        dropZone.addEventListener('drop', (e) => this.handleDrop(e), false);
+
+        // Handle click to select files
+        dropZone.addEventListener('click', () => this.selectFiles());
+    }
+
+    preventDefaults(e) {
+        e.preventDefault();
+        e.stopPropagation();
+    }
+
+    handleDrop(e) {
+        const dt = e.dataTransfer;
+        const files = dt.files;
+        this.processFiles(files);
+    }
+
+    selectFiles() {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.multiple = true;
+        input.accept = '.csv,image/*';
+        input.onchange = (e) => {
+            this.processFiles(e.target.files);
+        };
+        input.click();
+    }
+
+    processFiles(files) {
+        const fileArray = Array.from(files);
+        const csvFiles = fileArray.filter(file => file.name.toLowerCase().endsWith('.csv'));
+        const imageFiles = fileArray.filter(file => file.type.startsWith('image/'));
+        
+        if (csvFiles.length > 0) {
+            // Process CSV files
+            csvFiles.forEach(file => {
+                this.processCSVFile(file);
+            });
+        } else if (imageFiles.length > 0) {
+            // Process image files
+            imageFiles.forEach(file => {
+                this.createRowFromImage(file);
+            });
+        } else {
+            alert('Veuillez sélectionner des fichiers CSV ou des images valides.');
+            return;
+        }
+
+        this.updatePreview();
+        this.updateCounts();
+        this.saveData();
+    }
+
+    processCSVFile(file) {
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const csvContent = e.target.result;
+            this.parseCSV(csvContent);
+        };
+        reader.readAsText(file);
+    }
+
+    createRowFromImage(file) {
+        // Extract first name from filename (remove extension and clean up)
+        const fileName = file.name;
+        const nameWithoutExt = fileName.replace(/\.[^/.]+$/, ""); // Remove file extension
+        const firstName = nameWithoutExt.replace(/[-_]/g, ' ').trim(); // Replace dashes/underscores with spaces
+
+        const t = this.translations[this.currentLanguage];
+        const tbody = document.getElementById('badgeTableBody');
+        
+        // Create new row
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td><input type="text" class="name-input" value="${firstName}"></td>
+            <td>
+                <div class="image-input-container">
+                    <input type="checkbox" class="show-picture-checkbox" checked>
+                    <input type="file" class="picture-input" accept="image/*">
+                    <div class="image-preview"></div>
+                </div>
+            </td>
+            <td><select class="gender-select"><option value="genderless">${t.genderless}</option><option value="boy">${t.boy}</option><option value="girl">${t.girl}</option></select></td>
+            <td><button class="btn btn-danger remove-row">${t.remove}</button></td>
+        `;
+        
+        tbody.appendChild(newRow);
+        this.bindRowEvents(newRow);
+
+        // Process the image file
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            const imageData = e.target.result;
+            
+            // Make image square and save it
+            this.makeImageSquare(imageData, (squareImageData) => {
+                // Store the image data in the row
+                newRow.dataset.picture = squareImageData;
+                
+                // Show image preview
+                const previewDiv = newRow.querySelector('.image-preview');
+                if (previewDiv) {
+                    previewDiv.innerHTML = `<img src="${squareImageData}" alt="Photo de ${firstName}">`;
+                    previewDiv.classList.add('has-image');
+                }
+                
+                this.updatePreview();
+                this.saveData();
+            });
+        };
+        reader.readAsDataURL(file);
     }
 
     clearAll() {
@@ -665,17 +787,9 @@ class BadgeGenerator {
         const { name, picture, showPicture, gender } = badge;
         const formattedName = this.formatName(name);
         
-        // Calculate required width based on name length and font size
-        const requiredWidth = this.calculateRequiredWidth(name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter);
-        
-        // Add image space if we're in horizontal mode and actually showing an image
-        let finalWidth = requiredWidth;
-        if (this.settings.picturePosition === 'left' && showPicture && picture) {
-            const imageSpace = (this.settings.pictureDiameter / 37.7952755906) + 1.5; // 1.5cm gap
-            finalWidth += imageSpace;
-        }
-        
-        const badgeWidth = Math.max(this.settings.width, finalWidth);
+        // Calculate required width based on name length, font size, and image presence
+        const requiredWidth = this.calculateRequiredWidth(name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, showPicture, !!picture);
+        const badgeWidth = Math.max(this.settings.width, requiredWidth);
         
         let imageHTML = '';
         if (showPicture && picture) {
@@ -736,7 +850,7 @@ class BadgeGenerator {
         }
     }
 
-    calculateRequiredWidth(name, fontSize, picturePosition, pictureDiameter) {
+    calculateRequiredWidth(name, fontSize, picturePosition, pictureDiameter, showPicture = false, hasPicture = false) {
         // Estimate character width based on font size (rough approximation)
         const charWidth = fontSize * 0.6; // pixels per character
         const nameLength = name.length;
@@ -748,8 +862,11 @@ class BadgeGenerator {
         // Add padding and margins
         const padding = picturePosition === 'left' ? 1.5 : 2; // Less padding for horizontal badges
         
-        // Only add image space if we're in horizontal mode (image space is handled dynamically in createBadgeHTML)
-        const imageSpace = 0; // We'll handle this dynamically based on actual image presence
+        // Add image space if we're in horizontal mode and showing an image
+        let imageSpace = 0;
+        if (picturePosition === 'left' && showPicture && hasPicture) {
+            imageSpace = (pictureDiameter / 37.7952755906) + 1.5; // Image width + 1.5cm gap
+        }
         
         const requiredWidth = nameWidthCm + padding + imageSpace;
         
@@ -809,48 +926,21 @@ class BadgeGenerator {
         try {
             const data = {
                 settings: this.settings,
-                currentLanguage: this.currentLanguage,
-                badges: this.getBadgeData()
+                currentLanguage: this.currentLanguage
             };
             
             // Log the data being saved for debugging
-            console.log('Saving data:', {
+            console.log('Saving settings:', {
                 settingsCount: Object.keys(data.settings).length,
-                badgesCount: data.badges.length,
-                badgesWithImages: data.badges.filter(b => b.picture).length,
+                currentLanguage: data.currentLanguage,
                 totalSize: JSON.stringify(data).length
             });
             
             const jsonData = JSON.stringify(data);
-            
-            // Check if data is too large for localStorage
-            if (jsonData.length > 5000000) { // 5MB limit
-                console.warn('Data is very large, some images might not be saved:', jsonData.length, 'bytes');
-            }
-            
             localStorage.setItem('badgeGeneratorData', jsonData);
-            console.log('Data saved successfully');
+            console.log('Settings saved successfully');
         } catch (error) {
-            console.error('Could not save data to localStorage:', error);
-            
-            // If it's a QuotaExceededError, try to save without images
-            if (error.name === 'QuotaExceededError') {
-                console.log('localStorage quota exceeded, trying to save without images...');
-                try {
-                    const dataWithoutImages = {
-                        settings: this.settings,
-                        currentLanguage: this.currentLanguage,
-                        badges: this.getBadgeData().map(badge => ({
-                            ...badge,
-                            picture: null // Remove images to save space
-                        }))
-                    };
-                    localStorage.setItem('badgeGeneratorData', JSON.stringify(dataWithoutImages));
-                    console.log('Data saved without images');
-                } catch (retryError) {
-                    console.error('Could not save data even without images:', retryError);
-                }
-            }
+            console.error('Could not save settings to localStorage:', error);
         }
     }
 
@@ -879,54 +969,15 @@ class BadgeGenerator {
                 if (data.currentLanguage) {
                     this.currentLanguage = data.currentLanguage;
                 }
-
-                // Load badges
-                if (data.badges && data.badges.length > 0) {
-                    this.loadBadgesFromData(data.badges);
-                }
                 
                 // Apply language after loading data
                 this.updateLanguage();
-                
-                // Ensure there's exactly one empty row available
-                this.removeEmptyRows();
             }
         } catch (error) {
             console.log('Could not load data from localStorage:', error);
         }
     }
 
-    loadBadgesFromData(badges) {
-        const tbody = document.getElementById('badgeTableBody');
-        tbody.innerHTML = '';
-        
-        badges.forEach(badge => {
-            const t = this.translations[this.currentLanguage];
-            const newRow = document.createElement('tr');
-            newRow.innerHTML = `
-                <td><input type="text" class="name-input" value="${badge.name || ''}"></td>
-                <td>
-                    <div class="image-input-container">
-                        <input type="checkbox" class="show-picture-checkbox" ${badge.showPicture ? 'checked' : ''}>
-                        <input type="file" class="picture-input" accept="image/*">
-                        <div class="image-preview"></div>
-                    </div>
-                </td>
-                <td><select class="gender-select"><option value="genderless" ${badge.gender === 'genderless' ? 'selected' : ''}>${t.genderless}</option><option value="boy" ${badge.gender === 'boy' ? 'selected' : ''}>${t.boy}</option><option value="girl" ${badge.gender === 'girl' ? 'selected' : ''}>${t.girl}</option></select></td>
-                <td><button class="btn btn-danger remove-row">${t.remove}</button></td>
-            `;
-            tbody.appendChild(newRow);
-            this.bindRowEvents(newRow);
-            
-            // If there's picture data, restore it
-            if (badge.picture) {
-                this.restorePictureData(newRow, badge.picture);
-            }
-        });
-        
-        this.updatePreview();
-        this.updateCounts();
-    }
 
     async generatePDF() {
         const badges = this.getBadgeData();
@@ -935,6 +986,16 @@ class BadgeGenerator {
             alert('Please add at least one badge before generating PDF.');
             return;
         }
+
+        // Show loading state
+        const generateBtn = document.getElementById('generatePDF');
+        const originalText = generateBtn.textContent;
+        const originalDisabled = generateBtn.disabled;
+        
+        generateBtn.textContent = 'Génération en cours...';
+        generateBtn.disabled = true;
+        generateBtn.style.opacity = '0.7';
+        generateBtn.style.cursor = 'not-allowed';
 
         try {
             // Create a temporary container for PDF generation
@@ -968,7 +1029,7 @@ class BadgeGenerator {
                 }
                 
                 // Get the calculated width from the badge element
-                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter);
+                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, badge.showPicture, !!badge.picture);
                 const badgeWidth = Math.max(this.settings.width, calculatedWidth);
                 badgeElement.style.width = `${badgeWidth}cm`;
                 
@@ -992,7 +1053,7 @@ class BadgeGenerator {
                 const badgeElement = pdfContainer.children[i];
                 
                 // Calculate the actual width and height needed for this badge
-                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter);
+                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, badge.showPicture, !!badge.picture);
                 const badgeWidth = Math.max(defaultBadgeWidth, calculatedWidth);
                 
                 // Adjust height for horizontal badges
@@ -1048,9 +1109,21 @@ class BadgeGenerator {
             // Save PDF
             pdf.save('badges.pdf');
             
+            // Restore button state
+            generateBtn.textContent = originalText;
+            generateBtn.disabled = originalDisabled;
+            generateBtn.style.opacity = '';
+            generateBtn.style.cursor = '';
+            
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Error generating PDF. Please try again.');
+            
+            // Restore button state on error
+            generateBtn.textContent = originalText;
+            generateBtn.disabled = originalDisabled;
+            generateBtn.style.opacity = '';
+            generateBtn.style.cursor = '';
         }
     }
 
