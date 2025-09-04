@@ -2,16 +2,16 @@ class BadgeGenerator {
     constructor() {
         this.badges = [];
         this.settings = {
-            width: 8,
+            width: 7,
             height: 6,
             borderColor: '#4CAF50',
-            borderRadius: 15,
+            borderRadius: 32,
             borderWidth: 10,
-            fontSize: 18,
+            fontSize: 40,
             firstLetterColor: '#667eea',
-            firstLetterSizeRatio: 1.2,
+            firstLetterSizeRatio: 1,
             picturePosition: 'top',
-            pictureDiameter: 80,
+            pictureDiameter: 120,
             showImages: true
         };
         
@@ -938,7 +938,8 @@ class BadgeGenerator {
         );
         
         // Update badge width with !important to override CSS
-        const badgeWidth = this.settings.picturePosition === 'left' ? requiredWidth : Math.max(this.settings.width, requiredWidth);
+        const minHorizontalWidth = 3; // 3cm minimum width for horizontal badges
+        const badgeWidth = this.settings.picturePosition === 'left' ? Math.max(requiredWidth, minHorizontalWidth) : Math.max(this.settings.width, requiredWidth);
         badgeElement.style.setProperty('width', `${badgeWidth}cm`, 'important');
         
         console.log('After recalculation - badge element width:', badgeElement.style.width);
@@ -963,8 +964,9 @@ class BadgeGenerator {
         // Calculate required width based on name length, font size, and image presence
         const requiredWidth = this.calculateRequiredWidth(name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, effectiveShowPicture, !!picture, this.settings.height);
         
-        // For horizontal badges, ignore width setting and use calculated width
-        const badgeWidth = this.settings.picturePosition === 'left' ? requiredWidth : Math.max(this.settings.width, requiredWidth);
+        // For horizontal badges, ignore width setting and use calculated width with minimum
+        const minHorizontalWidth = 3; // 3cm minimum width for horizontal badges
+        const badgeWidth = this.settings.picturePosition === 'left' ? Math.max(requiredWidth, minHorizontalWidth) : Math.max(this.settings.width, requiredWidth);
         
         let imageHTML = '';
         if (effectiveShowPicture && picture) {
@@ -1128,7 +1130,8 @@ class BadgeGenerator {
             hasPicture,
             badgeHeight,
             pictureDiameter,
-            borderWidth: this.settings.borderWidth
+            borderWidth: this.settings.borderWidth,
+            finalWidth: picturePosition === 'left' ? Math.max(requiredWidth, 3) : Math.max(this.settings.width, requiredWidth)
         });
         
         return requiredWidth;
@@ -1252,11 +1255,12 @@ class BadgeGenerator {
             pdfContainer.style.position = 'absolute';
             pdfContainer.style.left = '-9999px';
             pdfContainer.style.top = '0';
-            pdfContainer.style.width = `${this.settings.width}cm`;
+            pdfContainer.style.width = 'auto'; // Let container adapt to content width
+            pdfContainer.style.minWidth = `${this.settings.width}cm`; // Minimum width
             pdfContainer.style.height = `${this.settings.height}cm`;
             pdfContainer.style.background = 'white';
             pdfContainer.style.boxSizing = 'border-box';
-            pdfContainer.style.overflow = 'hidden';
+            pdfContainer.style.overflow = 'visible'; // Allow content to extend beyond container
             document.body.appendChild(pdfContainer);
 
             // Generate all badges
@@ -1280,8 +1284,9 @@ class BadgeGenerator {
                 // Get the calculated width from the badge element
                 const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, badge.showPicture, !!badge.picture, this.settings.height);
                 
-                // For horizontal badges, ignore width setting and use calculated width
-                const badgeWidth = this.settings.picturePosition === 'left' ? calculatedWidth : Math.max(this.settings.width, calculatedWidth);
+                // For horizontal badges, ignore width setting and use calculated width with minimum
+                const minHorizontalWidth = 3; // 3cm minimum width for horizontal badges
+                const badgeWidth = this.settings.picturePosition === 'left' ? Math.max(calculatedWidth, minHorizontalWidth) : Math.max(this.settings.width, calculatedWidth);
                 badgeElement.style.width = `${badgeWidth}cm`;
                 
                 pdfContainer.appendChild(badgeElement);
@@ -1306,8 +1311,9 @@ class BadgeGenerator {
                 // Calculate the actual width and height needed for this badge
                 const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, badge.showPicture, !!badge.picture, this.settings.height);
                 
-                // For horizontal badges, ignore width setting and use calculated width
-                const badgeWidth = this.settings.picturePosition === 'left' ? calculatedWidth : Math.max(defaultBadgeWidth, calculatedWidth);
+                // For horizontal badges, ignore width setting and use calculated width with minimum
+                const minHorizontalWidth = 3; // 3cm minimum width for horizontal badges
+                const badgeWidth = this.settings.picturePosition === 'left' ? Math.max(calculatedWidth, minHorizontalWidth) : Math.max(defaultBadgeWidth, calculatedWidth);
                 
                 // Adjust height for horizontal badges
                 let badgeHeight = defaultBadgeHeight;
@@ -1334,16 +1340,62 @@ class BadgeGenerator {
                 }
 
                 try {
+                    // Ensure the badge element has the correct width before html2canvas
+                    badgeElement.style.width = `${badgeWidth}cm`;
+                    badgeElement.style.height = `${badgeHeight}cm`;
+                    badgeElement.style.minWidth = `${badgeWidth}cm`;
+                    badgeElement.style.maxWidth = 'none';
+                    badgeElement.style.overflow = 'visible';
+                    
+                    // Override any CSS constraints that might limit width
+                    const badgeInner = badgeElement.querySelector('.badge');
+                    if (badgeInner) {
+                        badgeInner.style.maxWidth = 'none';
+                        badgeInner.style.width = '100%';
+                        badgeInner.style.minWidth = '100%';
+                        badgeInner.style.overflow = 'visible';
+                    }
+                    
+                    // Ensure text content is not clipped
+                    const badgeName = badgeElement.querySelector('.badge-name');
+                    if (badgeName) {
+                        badgeName.style.overflow = 'visible';
+                        badgeName.style.textOverflow = 'clip';
+                        badgeName.style.whiteSpace = 'nowrap';
+                    }
+                    
+                    // Small delay to ensure DOM updates
+                    await new Promise(resolve => setTimeout(resolve, 10));
+                    
+                    console.log('PDF badge generation:', {
+                        name: badge.name,
+                        badgeWidth,
+                        badgeHeight,
+                        picturePosition: this.settings.picturePosition,
+                        showPicture: badge.showPicture,
+                        hasPicture: !!badge.picture
+                    });
+                    
                     const canvas = await html2canvas(badgeElement, {
                         scale: 2,
                         backgroundColor: 'white',
-                        width: badgeWidth * 37.7952755906, // Convert cm to pixels (96 DPI)
-                        height: badgeHeight * 37.7952755906,
                         useCORS: true,
-                        allowTaint: true
+                        allowTaint: true,
+                        logging: false,
+                        width: undefined, // Let html2canvas determine natural width
+                        height: undefined // Let html2canvas determine natural height
                     });
 
                     const imgData = canvas.toDataURL('image/png');
+                    
+                    console.log('Canvas dimensions:', {
+                        canvasWidth: canvas.width,
+                        canvasHeight: canvas.height,
+                        badgeWidth,
+                        badgeHeight,
+                        name: badge.name
+                    });
+                    
                     pdf.addImage(imgData, 'PNG', currentX, currentY, badgeWidth, badgeHeight);
                     
                     currentX += badgeWidth + 0.5;
