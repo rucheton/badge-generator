@@ -11,7 +11,8 @@ class BadgeGenerator {
             firstLetterColor: '#667eea',
             firstLetterSizeRatio: 1.2,
             picturePosition: 'top',
-            pictureDiameter: 80
+            pictureDiameter: 80,
+            showImages: true
         };
         
         this.currentLanguage = 'fr';
@@ -32,6 +33,9 @@ class BadgeGenerator {
                 picturePositionTop: 'Haut (au-dessus du nom)',
                 picturePositionLeft: 'Gauche (à côté du nom)',
                 pictureDiameter: 'Diamètre de l\'Image (px):',
+                showImages: 'Afficher les Images:',
+                showImagesHide: 'Masquer',
+                showImagesShow: 'Afficher',
                 badgeData: 'Données des Badges',
                 clearAll: 'Tout Effacer',
                 importCSV: 'Importer CSV',
@@ -40,6 +44,7 @@ class BadgeGenerator {
                 showPicture: 'Afficher l\'Image',
                 gender: 'Genre',
                 actions: 'Actions',
+                remove: 'Supprimer',
                 enterFirstName: 'Entrez le prénom',
                 genderless: 'Sans Genre',
                 boy: 'Garçon',
@@ -68,6 +73,9 @@ class BadgeGenerator {
                 picturePositionTop: 'Top (above name)',
                 picturePositionLeft: 'Left (beside name)',
                 pictureDiameter: 'Picture Diameter (px):',
+                showImages: 'Show Images:',
+                showImagesHide: 'Hide',
+                showImagesShow: 'Show',
                 badgeData: 'Badge Data',
                 clearAll: 'Clear All',
                 importCSV: 'Import CSV',
@@ -76,6 +84,7 @@ class BadgeGenerator {
                 showPicture: 'Show Picture',
                 gender: 'Gender',
                 actions: 'Actions',
+                remove: 'Remove',
                 enterFirstName: 'Enter first name',
                 genderless: 'Genderless',
                 boy: 'Boy',
@@ -162,13 +171,19 @@ class BadgeGenerator {
         });
 
         document.getElementById('picturePosition').addEventListener('change', (e) => {
-            this.settings.picturePosition = e.target.value;
+            this.settings.picturePosition = e.target.checked ? 'left' : 'top';
             this.saveData();
             this.updatePreview();
         });
 
         document.getElementById('pictureDiameter').addEventListener('change', (e) => {
             this.settings.pictureDiameter = parseInt(e.target.value);
+            this.saveData();
+            this.updatePreview();
+        });
+
+        document.getElementById('showImages').addEventListener('change', (e) => {
+            this.settings.showImages = e.target.checked;
             this.saveData();
             this.updatePreview();
         });
@@ -220,11 +235,21 @@ class BadgeGenerator {
         document.querySelector('label[for="firstLetterSizeRatio"]').textContent = t.firstLetterSizeRatio;
         document.querySelector('label[for="picturePosition"]').textContent = t.picturePosition;
         document.querySelector('label[for="pictureDiameter"]').textContent = t.pictureDiameter;
+        document.querySelector('label[for="showImages"]').textContent = t.showImages;
         
-        // Update picture position options
-        const picturePositionSelect = document.getElementById('picturePosition');
-        picturePositionSelect.options[0].text = t.picturePositionTop;
-        picturePositionSelect.options[1].text = t.picturePositionLeft;
+        // Update picture position toggle labels
+        const picturePositionToggleLabels = document.querySelectorAll('#picturePosition').nextElementSibling?.querySelectorAll('.toggle-label');
+        if (picturePositionToggleLabels && picturePositionToggleLabels.length >= 2) {
+            picturePositionToggleLabels[0].textContent = t.picturePositionTop;
+            picturePositionToggleLabels[1].textContent = t.picturePositionLeft;
+        }
+
+        // Update show images toggle labels
+        const showImagesToggleLabels = document.querySelectorAll('#showImages').nextElementSibling?.querySelectorAll('.toggle-label');
+        if (showImagesToggleLabels && showImagesToggleLabels.length >= 2) {
+            showImagesToggleLabels[0].textContent = t.showImagesHide;
+            showImagesToggleLabels[1].textContent = t.showImagesShow;
+        }
         
         // Update input panel
         document.querySelector('.input-panel h2').textContent = t.badgeData;
@@ -381,7 +406,7 @@ class BadgeGenerator {
                 </div>
             </td>
             <td><select class="gender-select"><option value="genderless">${t.genderless}</option><option value="boy">${t.boy}</option><option value="girl">${t.girl}</option></select></td>
-            <td><button class="btn btn-danger remove-row">${t.remove}</button></td>
+            <td><button class="btn btn-danger remove-row" title="${t.remove}">❌</button></td>
         `;
         
         currentRow.parentNode.insertBefore(newRow, currentRow.nextSibling);
@@ -622,7 +647,7 @@ class BadgeGenerator {
                 </div>
             </td>
             <td><select class="gender-select"><option value="genderless">${t.genderless}</option><option value="boy">${t.boy}</option><option value="girl">${t.girl}</option></select></td>
-            <td><button class="btn btn-danger remove-row">${t.remove}</button></td>
+            <td><button class="btn btn-danger remove-row" title="${t.remove}">❌</button></td>
         `;
         
         tbody.appendChild(newRow);
@@ -666,7 +691,7 @@ class BadgeGenerator {
                     </div>
                 </td>
                 <td><select class="gender-select"><option value="genderless">${t.genderless}</option><option value="boy">${t.boy}</option><option value="girl">${t.girl}</option></select></td>
-                <td><button class="btn btn-danger remove-row">${t.remove}</button></td>
+                <td><button class="btn btn-danger remove-row" title="${t.remove}">❌</button></td>
             </tr>
         `;
         this.bindRowEvents(tbody.querySelector('tr'));
@@ -713,7 +738,7 @@ class BadgeGenerator {
                             </div>
                         </td>
                         <td><select class="gender-select"><option value="genderless">${t.genderless}</option><option value="boy">${t.boy}</option><option value="girl">${t.girl}</option></select></td>
-                        <td><button class="btn btn-danger remove-row">${t.remove}</button></td>
+                        <td><button class="btn btn-danger remove-row" title="${t.remove}">❌</button></td>
                     `;
                     tbody.appendChild(newRow);
                     this.bindRowEvents(newRow);
@@ -736,7 +761,7 @@ class BadgeGenerator {
             const genderSelect = row.querySelector('.gender-select');
             
             const name = nameInput.value.trim();
-            const showPicture = showPictureCheckbox.checked;
+            const showPicture = showPictureCheckbox.checked && this.settings.showImages; // Apply global setting
             const gender = genderSelect.value;
             
             // Only include rows that have a name
@@ -781,21 +806,177 @@ class BadgeGenerator {
         
         const previewHTML = this.badges.map(badge => this.createBadgeHTML(badge)).join('');
         previewContainer.innerHTML = previewHTML;
+        
+        // Recalculate widths after images load
+        this.recalculateWidthsAfterImageLoad();
+        
+        // Also set up image load listeners for more precise timing
+        this.setupImageLoadListeners();
+    }
+
+    recalculateWidthsAfterImageLoad() {
+        console.log('Starting width recalculation...');
+        
+        // Multiple timeouts to catch images loading at different stages
+        const timeouts = [100, 300, 500, 1000, 2000]; // Multiple attempts
+        
+        timeouts.forEach((delay, index) => {
+            setTimeout(() => {
+                console.log(`Width recalculation attempt ${index + 1} (${delay}ms delay)`);
+                const previewContainer = document.getElementById('badgePreview');
+                const badgeElements = previewContainer.querySelectorAll('.badge');
+                
+                badgeElements.forEach((badgeElement, badgeIndex) => {
+                    if (badgeIndex < this.badges.length) {
+                        const badge = this.badges[badgeIndex];
+                        console.log(`Recalculating width for badge: ${badge.name} (attempt ${index + 1})`);
+                        this.recalculateBadgeWidth(badgeElement, badge);
+                    }
+                });
+            }, delay);
+        });
+    }
+
+    setupImageLoadListeners() {
+        const previewContainer = document.getElementById('badgePreview');
+        const images = previewContainer.querySelectorAll('img');
+        
+        console.log('Setting up image load listeners for', images.length, 'images');
+        
+        images.forEach((img, index) => {
+            if (img.complete) {
+                console.log(`Image ${index + 1} already loaded`);
+                // Image is already loaded, trigger recalculation
+                setTimeout(() => {
+                    this.triggerWidthRecalculation();
+                }, 50);
+            } else {
+                console.log(`Setting up load listener for image ${index + 1}`);
+                img.addEventListener('load', () => {
+                    console.log(`Image ${index + 1} finished loading, triggering recalculation`);
+                    this.triggerWidthRecalculation();
+                });
+                
+                img.addEventListener('error', () => {
+                    console.log(`Image ${index + 1} failed to load, triggering recalculation anyway`);
+                    this.triggerWidthRecalculation();
+                });
+            }
+        });
+    }
+
+    triggerWidthRecalculation() {
+        console.log('Triggering width recalculation due to image load');
+        const previewContainer = document.getElementById('badgePreview');
+        const badgeElements = previewContainer.querySelectorAll('.badge');
+        
+        badgeElements.forEach((badgeElement, index) => {
+            if (index < this.badges.length) {
+                const badge = this.badges[index];
+                this.recalculateBadgeWidth(badgeElement, badge);
+            }
+        });
+    }
+
+    // Manual trigger for testing - call this from browser console
+    manualRecalculateWidths() {
+        console.log('Manual width recalculation triggered');
+        this.recalculateWidthsAfterImageLoad();
+    }
+
+    // Debug function to show current badge widths
+    debugBadgeWidths() {
+        const previewContainer = document.getElementById('badgePreview');
+        const badgeElements = previewContainer.querySelectorAll('.badge');
+        
+        console.log('=== BADGE WIDTH DEBUG ===');
+        badgeElements.forEach((badgeElement, index) => {
+            if (index < this.badges.length) {
+                const badge = this.badges[index];
+                const computedStyle = window.getComputedStyle(badgeElement);
+                const requiredWidth = this.calculateRequiredWidth(
+                    badge.name, 
+                    this.settings.fontSize, 
+                    this.settings.picturePosition, 
+                    this.settings.pictureDiameter, 
+                    badge.showPicture, 
+                    !!badge.picture, 
+                    this.settings.height
+                );
+                
+                console.log(`Badge ${index + 1} (${badge.name}):`, {
+                    inlineWidth: badgeElement.style.width,
+                    computedWidth: computedStyle.width,
+                    requiredWidth: `${requiredWidth}cm`,
+                    picturePosition: this.settings.picturePosition,
+                    hasPicture: !!badge.picture,
+                    showPicture: badge.showPicture,
+                    pictureDiameter: this.settings.pictureDiameter,
+                    badgeHeight: this.settings.height,
+                    borderWidth: this.settings.borderWidth,
+                    fontSize: this.settings.fontSize
+                });
+            }
+        });
+        console.log('=== END DEBUG ===');
+    }
+
+    recalculateBadgeWidth(badgeElement, badge) {
+        const { name, showPicture, picture } = badge;
+        
+        console.log('Before recalculation - badge element width:', badgeElement.style.width);
+        
+        // Recalculate required width
+        const requiredWidth = this.calculateRequiredWidth(
+            name, 
+            this.settings.fontSize, 
+            this.settings.picturePosition, 
+            this.settings.pictureDiameter, 
+            showPicture, 
+            !!picture, 
+            this.settings.height
+        );
+        
+        // Update badge width with !important to override CSS
+        const badgeWidth = this.settings.picturePosition === 'left' ? requiredWidth : Math.max(this.settings.width, requiredWidth);
+        badgeElement.style.setProperty('width', `${badgeWidth}cm`, 'important');
+        
+        console.log('After recalculation - badge element width:', badgeElement.style.width);
+        console.log('Recalculated width for badge:', {
+            name,
+            requiredWidth,
+            badgeWidth,
+            picturePosition: this.settings.picturePosition,
+            showPicture,
+            hasPicture: !!picture,
+            pictureDiameter: this.settings.pictureDiameter
+        });
     }
 
     createBadgeHTML(badge) {
         const { name, picture, showPicture, gender } = badge;
         const formattedName = this.formatName(name);
         
+        // Apply global showImages setting - if global setting is false, don't show any images
+        const effectiveShowPicture = this.settings.showImages && showPicture;
+        
         // Calculate required width based on name length, font size, and image presence
-        const requiredWidth = this.calculateRequiredWidth(name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, showPicture, !!picture);
-        const badgeWidth = Math.max(this.settings.width, requiredWidth);
+        const requiredWidth = this.calculateRequiredWidth(name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, effectiveShowPicture, !!picture, this.settings.height);
+        
+        // For horizontal badges, ignore width setting and use calculated width
+        const badgeWidth = this.settings.picturePosition === 'left' ? requiredWidth : Math.max(this.settings.width, requiredWidth);
         
         let imageHTML = '';
-        if (showPicture && picture) {
+        if (effectiveShowPicture && picture) {
             // Show the actual image when checkbox is checked and image exists
-            imageHTML = `<img src="${picture}" alt="Photo de ${name}" class="badge-image" style="width: ${this.settings.pictureDiameter}px; height: ${this.settings.pictureDiameter}px; object-fit: cover; border-radius: 50%; border: 2px solid ${this.settings.borderColor};">`;
-        } else if (showPicture && !picture) {
+            if (this.settings.picturePosition === 'left') {
+                // For horizontal badges, don't apply inline styles - let CSS handle it
+                imageHTML = `<img src="${picture}" alt="Photo de ${name}" class="badge-image">`;
+            } else {
+                // For vertical badges, use the original inline styling
+                imageHTML = `<img src="${picture}" alt="Photo de ${name}" class="badge-image" style="width: ${this.settings.pictureDiameter}px; height: ${this.settings.pictureDiameter}px; object-fit: cover; border-radius: 50%; border: 2px solid ${this.settings.borderColor};">`;
+            }
+        } else if (effectiveShowPicture && !picture) {
             // Show emoji avatar when checkbox is checked but no image exists
             let avatarEmoji;
             
@@ -808,32 +989,41 @@ class BadgeGenerator {
                 avatarEmoji = '🧒';
             }
             
-            imageHTML = `<div class="default-avatar" style="background-color: ${this.settings.borderColor}; border-color: ${this.settings.borderColor}; width: ${this.settings.pictureDiameter}px; height: ${this.settings.pictureDiameter}px; font-size: ${this.settings.pictureDiameter * 0.5}px;">${avatarEmoji}</div>`;
+            if (this.settings.picturePosition === 'left') {
+                // For horizontal badges, don't apply inline styles - let CSS handle it
+                imageHTML = `<div class="default-avatar">${avatarEmoji}</div>`;
+            } else {
+                // For vertical badges, use the original inline styling
+                imageHTML = `<div class="default-avatar" style="background-color: ${this.settings.borderColor}; border-color: ${this.settings.borderColor}; width: ${this.settings.pictureDiameter}px; height: ${this.settings.pictureDiameter}px; font-size: ${this.settings.pictureDiameter * 0.5}px;">${avatarEmoji}</div>`;
+            }
         } else {
             // No image display when checkbox is unchecked (but image data is preserved)
             imageHTML = '';
         }
         
         const badgeStyle = `
-            width: ${badgeWidth}cm;
-            height: ${this.settings.picturePosition === 'left' ? 'auto' : `${this.settings.height}cm`};
-            min-height: ${this.settings.picturePosition === 'left' ? '80px' : `${this.settings.height}cm`};
+            width: ${badgeWidth}cm !important;
+            height: ${this.settings.height}cm;
+            min-height: ${this.settings.height}cm;
             border: ${this.settings.borderWidth}px solid ${this.settings.borderColor};
             border-radius: ${this.settings.borderRadius}px;
             font-size: ${this.settings.fontSize}px;
-            padding: ${this.settings.picturePosition === 'left' ? '8px' : '15px'};
+            padding: ${this.settings.picturePosition === 'left' ? '0' : '15px'};
         `;
         
         if (this.settings.picturePosition === 'left') {
             // For horizontal badges, check if we need to center the name when no image
-            const shouldCenterName = !showPicture || !picture;
+            const shouldCenterName = !effectiveShowPicture || !picture;
             const badgeClass = shouldCenterName ? 'badge badge-horizontal badge-centered' : 'badge badge-horizontal';
             const contentStyle = shouldCenterName ? 'justify-content: center; text-align: center;' : '';
             
+            // Calculate image container width for content spacing
+            const imageContainerWidth = this.settings.height * 37.7952755906; // Convert cm to pixels
+            
             return `
                 <div class="${badgeClass}" style="${badgeStyle}">
-                    ${shouldCenterName ? '' : '<div class="badge-image-container">' + imageHTML + '</div>'}
-                    <div class="badge-content-horizontal" style="${contentStyle}">
+                    ${shouldCenterName ? '' : `<div class="badge-image-container" style="border-top-left-radius: ${this.settings.borderRadius / 2}px; border-bottom-left-radius: ${this.settings.borderRadius / 2}px;">${imageHTML}</div>`}
+                    <div class="badge-content-horizontal" style="${contentStyle}; margin-left: ${shouldCenterName ? '0' : imageContainerWidth + 'px'}; padding: 5px;">
                         <div class="badge-name">${formattedName}</div>
                     </div>
                 </div>
@@ -850,37 +1040,95 @@ class BadgeGenerator {
         }
     }
 
-    calculateRequiredWidth(name, fontSize, picturePosition, pictureDiameter, showPicture = false, hasPicture = false) {
-        // Estimate character width based on font size (rough approximation)
-        const charWidth = fontSize * 0.6; // pixels per character
-        const nameLength = name.length;
-        const estimatedNameWidth = nameLength * charWidth;
+    calculateRequiredWidth(name, fontSize, picturePosition, pictureDiameter, showPicture = false, hasPicture = false, badgeHeight = 6) {
+        let nameWidthCm;
         
-        // Convert pixels to cm (96 DPI)
-        const nameWidthCm = estimatedNameWidth / 37.7952755906;
-        
-        // Add padding and margins
-        const padding = picturePosition === 'left' ? 1.5 : 2; // Less padding for horizontal badges
-        
-        // Add image space if we're in horizontal mode and showing an image
-        let imageSpace = 0;
-        if (picturePosition === 'left' && showPicture && hasPicture) {
-            imageSpace = (pictureDiameter / 37.7952755906) + 1.5; // Image width + 1.5cm gap
+        try {
+            // Create a temporary canvas to measure actual text width
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            context.font = `700 ${fontSize}px 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif`;
+            // Note: letterSpacing might not be supported in all browsers
+            try {
+                context.letterSpacing = '1px'; // Match CSS letter-spacing
+            } catch (e) {
+                console.warn('letterSpacing not supported, using fallback calculation');
+            }
+            const textMetrics = context.measureText(name.toUpperCase());
+            const actualTextWidth = textMetrics.width;
+            
+            // Convert pixels to cm (96 DPI)
+            nameWidthCm = actualTextWidth / 37.7952755906;
+            
+            console.log('Canvas text measurement:', {
+                name: name.toUpperCase(),
+                fontSize,
+                actualTextWidthPx: actualTextWidth,
+                nameWidthCm,
+                font: context.font
+            });
+        } catch (error) {
+            console.warn('Canvas measurement failed, using fallback:', error);
+            // Fallback to character-based estimation with letter spacing
+            const charWidth = fontSize * 0.7;
+            const nameLength = name.length;
+            const letterSpacing = 1; // 1px letter spacing from CSS
+            const estimatedNameWidth = (nameLength * charWidth) + ((nameLength - 1) * letterSpacing);
+            nameWidthCm = estimatedNameWidth / 37.7952755906;
         }
         
-        const requiredWidth = nameWidthCm + padding + imageSpace;
+        // Calculate all spacing components
+        
+        // 1. Border width (left + right borders)
+        const borderWidthCm = (this.settings.borderWidth * 2) / 37.7952755906; // Convert pixels to cm
+        
+        // 2. Badge padding (left + right padding)
+        let badgePaddingCm = 0;
+        if (picturePosition === 'left') {
+            // Horizontal badges have no badge padding (padding: 0)
+            badgePaddingCm = 0;
+        } else {
+            // Vertical badges have 15px padding on each side
+            badgePaddingCm = (15 * 2) / 37.7952755906; // Convert pixels to cm
+        }
+        
+        // 3. Content padding for horizontal badges (5px on each side)
+        let contentPaddingCm = 0;
+        if (picturePosition === 'left') {
+            contentPaddingCm = (5 * 2) / 37.7952755906; // Convert pixels to cm
+        }
+        
+        // 4. Image space for horizontal badges
+        let imageSpaceCm = 0;
+        if (picturePosition === 'left' && showPicture && hasPicture) {
+            // For horizontal badges, the image container is square and takes full badge height
+            // Convert badge height to pixels, then back to cm to match HTML calculation
+            const imageContainerWidthPx = badgeHeight * 37.7952755906; // Convert cm to pixels
+            imageSpaceCm = imageContainerWidthPx / 37.7952755906; // Convert back to cm
+        }
+        
+        // 5. Additional safety margin - increased for image loading issues
+        const safetyMarginCm = 0.5; // 0.5cm safety margin to account for image loading
+        
+        const requiredWidth = nameWidthCm + borderWidthCm + badgePaddingCm + contentPaddingCm + imageSpaceCm + safetyMarginCm;
         
         console.log('Width calculation:', {
             name,
-            nameLength,
             fontSize,
-            charWidth,
-            estimatedNameWidth,
             nameWidthCm,
-            padding,
-            imageSpace,
+            borderWidthCm,
+            badgePaddingCm,
+            contentPaddingCm,
+            imageSpaceCm,
+            safetyMarginCm,
             requiredWidth,
-            minWidth: this.settings.width
+            minWidth: this.settings.width,
+            picturePosition,
+            showPicture,
+            hasPicture,
+            badgeHeight,
+            pictureDiameter,
+            borderWidth: this.settings.borderWidth
         });
         
         return requiredWidth;
@@ -961,8 +1209,9 @@ class BadgeGenerator {
                     document.getElementById('fontSize').value = this.settings.fontSize;
                     document.getElementById('firstLetterColor').value = this.settings.firstLetterColor;
                     document.getElementById('firstLetterSizeRatio').value = this.settings.firstLetterSizeRatio;
-                    document.getElementById('picturePosition').value = this.settings.picturePosition;
+                    document.getElementById('picturePosition').checked = this.settings.picturePosition === 'left';
                     document.getElementById('pictureDiameter').value = this.settings.pictureDiameter;
+                    document.getElementById('showImages').checked = this.settings.showImages;
                 }
 
                 // Load language preference
@@ -1029,8 +1278,10 @@ class BadgeGenerator {
                 }
                 
                 // Get the calculated width from the badge element
-                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, badge.showPicture, !!badge.picture);
-                const badgeWidth = Math.max(this.settings.width, calculatedWidth);
+                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, badge.showPicture, !!badge.picture, this.settings.height);
+                
+                // For horizontal badges, ignore width setting and use calculated width
+                const badgeWidth = this.settings.picturePosition === 'left' ? calculatedWidth : Math.max(this.settings.width, calculatedWidth);
                 badgeElement.style.width = `${badgeWidth}cm`;
                 
                 pdfContainer.appendChild(badgeElement);
@@ -1053,8 +1304,10 @@ class BadgeGenerator {
                 const badgeElement = pdfContainer.children[i];
                 
                 // Calculate the actual width and height needed for this badge
-                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, badge.showPicture, !!badge.picture);
-                const badgeWidth = Math.max(defaultBadgeWidth, calculatedWidth);
+                const calculatedWidth = this.calculateRequiredWidth(badge.name, this.settings.fontSize, this.settings.picturePosition, this.settings.pictureDiameter, badge.showPicture, !!badge.picture, this.settings.height);
+                
+                // For horizontal badges, ignore width setting and use calculated width
+                const badgeWidth = this.settings.picturePosition === 'left' ? calculatedWidth : Math.max(defaultBadgeWidth, calculatedWidth);
                 
                 // Adjust height for horizontal badges
                 let badgeHeight = defaultBadgeHeight;
@@ -1139,5 +1392,15 @@ class BadgeGenerator {
 
 // Initialize the badge generator when the page loads
 document.addEventListener('DOMContentLoaded', () => {
-    new BadgeGenerator();
+    window.badgeApp = new BadgeGenerator();
+    
+    // Expose manual recalculation function globally for testing
+    window.manualRecalculateWidths = () => {
+        window.badgeApp.manualRecalculateWidths();
+    };
+    
+    // Expose debug function globally for testing
+    window.debugBadgeWidths = () => {
+        window.badgeApp.debugBadgeWidths();
+    };
 });

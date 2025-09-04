@@ -64,16 +64,32 @@
                 </div>
 
                 <div class="setting-group">
-                    <label for="picturePosition">Position de l'Image:</label>
-                    <select id="picturePosition">
-                        <option value="top">Haut (au-dessus du nom)</option>
-                        <option value="left">Gauche (à côté du nom)</option>
-                    </select>
+                    <label for="picturePosition">Layout:</label>
+                    <div class="toggle-container">
+                        <span class="toggle-label">Vertical</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="picturePosition">
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Horizontal</span>
+                    </div>
                 </div>
 
                 <div class="setting-group">
                     <label for="pictureDiameter">Diamètre de l'Image (px):</label>
                     <input type="number" id="pictureDiameter" value="80" min="40" max="200" step="5">
+                </div>
+
+                <div class="setting-group">
+                    <label for="showImages">Afficher les Images:</label>
+                    <div class="toggle-container">
+                        <span class="toggle-label">Masquer</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showImages" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <span class="toggle-label">Afficher</span>
+                    </div>
                 </div>
             </div>
 
