@@ -633,11 +633,26 @@ class BadgeGenerator {
         reader.readAsText(file);
     }
 
-    createRowFromImage(file) {
-        // Extract first name from filename (remove extension and clean up)
-        const fileName = file.name;
+    // Utility function to extract first name from filename
+    // Handles formats like: "jean_dupont.jpg" -> "jean", "marie-claire_martin.png" -> "marie-claire", "pierre.jpg" -> "pierre"
+    extractFirstNameFromFilename(fileName) {
         const nameWithoutExt = fileName.replace(/\.[^/.]+$/, ""); // Remove file extension
-        const firstName = nameWithoutExt.replace(/[-_]/g, ' ').trim(); // Replace dashes/underscores with spaces
+        
+        // Extract first name based on separator logic
+        if (nameWithoutExt.includes('_')) {
+            // Format: prenom_nomdefamille or prenom-compose_nomdefamille
+            // Underscore is the separator between first name and family name
+            const parts = nameWithoutExt.split('_');
+            return parts[0].trim(); // Take everything before the first underscore (preserving hyphens in composed names)
+        } else {
+            // No underscore separator, use the whole name (could be a single name or composed first name)
+            return nameWithoutExt.trim(); // Keep the name as is, including hyphens
+        }
+    }
+
+    createRowFromImage(file) {
+        // Extract first name from filename using utility function
+        const firstName = this.extractFirstNameFromFilename(file.name);
 
         const t = this.translations[this.currentLanguage];
         const tbody = document.getElementById('badgeTableBody');
