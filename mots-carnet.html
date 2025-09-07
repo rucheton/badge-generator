@@ -294,6 +294,9 @@
 </head>
 <body>
     <div class="container">
+        <div class="nav-link">
+            <a href="index.html">← Retour à l'accueil</a>
+        </div>
         <h1>📝 Générateur de Mots - Carnet de Liaison</h1>
         
         <div class="form-group">
@@ -602,7 +605,7 @@
                         console.log(`Page ${i + 1}: ${pageElement.children.length} mots dans le DOM`);
                         
                         const canvas = await html2canvas(pageElement, {
-                            scale: 3, // Résolution 3x pour impression haute qualité
+                            scale: 4, // Résolution 4x pour impression 300 DPI professionnelle
                             backgroundColor: 'white',
                             width: 29.7 * 37.7952755906, // Convertir cm en pixels
                             height: 21 * 37.7952755906,

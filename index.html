@@ -1,160 +1,197 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="fr">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Badge Generator</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <title>Générateurs d'Étiquettes et de Mots - Accueil</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 3rem;
+            color: white;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+
+        .feature-card {
+            background: white;
+            border-radius: 15px;
+            padding: 2rem;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h2 {
+            font-size: 1.5rem;
+            margin-bottom: 1rem;
+            color: #2c3e50;
+        }
+
+        .feature-card p {
+            color: #666;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin-bottom: 1.5rem;
+        }
+
+        .feature-list li {
+            padding: 0.3rem 0;
+            color: #555;
+        }
+
+        .feature-list li:before {
+            content: "✓ ";
+            color: #27ae60;
+            font-weight: bold;
+        }
+
+        .btn {
+            display: inline-block;
+            background: linear-gradient(45deg, #667eea, #764ba2);
+            color: white;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            text-decoration: none;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+        }
+
+        .btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+        }
+
+        .footer {
+            text-align: center;
+            color: white;
+            opacity: 0.8;
+            margin-top: 3rem;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .features-grid {
+                grid-template-columns: 1fr;
+                gap: 1.5rem;
+            }
+            
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
 </head>
 <body>
     <div class="container">
-        <header>
-            <div class="language-selector">
-                <button class="lang-btn active" data-lang="fr">Français</button>
-                <button class="lang-btn" data-lang="en">English</button>
-            </div>
-            <h1>🎖️ Générateur de Badges</h1>
-            <p>Créez de beaux badges imprimables pour vos événements</p>
-        </header>
+        <div class="header">
+            <h1>🏷️ Générateurs d'Étiquettes et de Mots</h1>
+            <p>Créez facilement des étiquettes, des lettres à découper et des mots pour le carnet de liaison</p>
+        </div>
 
-        <div class="main-content">
-            <div class="settings-panel">
-                <h2>Paramètres</h2>
-                
-                <div class="setting-group">
-                    <label for="badgeWidth">Largeur du Badge (cm):</label>
-                    <input type="number" id="badgeWidth" value="7" min="5" max="15" step="0.5">
-                </div>
+        <div class="features-grid">
+            <!-- Générateur d'Étiquettes -->
+            <a href="badge-generator.html" class="feature-card">
+                <span class="feature-icon">🏷️</span>
+                <h2>Générateur d'Étiquettes</h2>
+                <p>Créez des étiquettes personnalisées avec photos et noms pour les élèves.</p>
+                <ul class="feature-list">
+                    <li>Import CSV avec photos</li>
+                    <li>Mise en page horizontale/verticale</li>
+                    <li>Personnalisation complète</li>
+                    <li>Export PDF haute qualité</li>
+                </ul>
+                <div class="btn">Créer des Étiquettes</div>
+            </a>
 
-                <div class="setting-group">
-                    <label for="badgeHeight">Hauteur du Badge (cm):</label>
-                    <input type="number" id="badgeHeight" value="6" min="4" max="12" step="0.5">
-                </div>
+            <!-- Générateur de Lettres -->
+            <a href="letter-squares.html" class="feature-card">
+                <span class="feature-icon">🔤</span>
+                <h2>Générateur de Lettres à Découper</h2>
+                <p>Générez des lettres individuelles dans des carrés pour faciliter le découpage.</p>
+                <ul class="feature-list">
+                    <li>Import CSV des prénoms</li>
+                    <li>Lettres centrées dans des carrés</li>
+                    <li>Tailles personnalisables</li>
+                    <li>Format optimisé pour découpage</li>
+                </ul>
+                <div class="btn">Créer des Lettres</div>
+            </a>
 
-                <div class="setting-group">
-                    <label for="borderColor">Couleur de la Bordure:</label>
-                    <input type="color" id="borderColor" value="#4CAF50">
-                </div>
+            <!-- Générateur de Mots -->
+            <a href="mots-carnet.html" class="feature-card">
+                <span class="feature-icon">📝</span>
+                <h2>Générateur de Mots - Carnet de Liaison</h2>
+                <p>Créez des mots formatés pour le carnet de liaison des élèves.</p>
+                <ul class="feature-list">
+                    <li>Édition riche (gras, souligné)</li>
+                    <li>Cases à cocher intégrées</li>
+                    <li>Format A4 optimisé</li>
+                    <li>Calcul automatique du nombre de mots</li>
+                </ul>
+                <div class="btn">Créer des Mots</div>
+            </a>
+        </div>
 
-                <div class="setting-group">
-                    <label for="borderRadius">Rayon de la Bordure (px):</label>
-                    <input type="number" id="borderRadius" value="32" min="5" max="50">
-                </div>
-
-                <div class="setting-group">
-                    <label for="borderWidth">Épaisseur de la Bordure (px):</label>
-                    <input type="number" id="borderWidth" value="10" min="1" max="30">
-                </div>
-
-                <div class="setting-group">
-                    <label for="fontSize">Taille de la Police (px):</label>
-                    <input type="number" id="fontSize" value="40" min="12" max="72" step="1">
-                </div>
-
-                <div class="setting-group">
-                    <label for="firstLetterColor">Couleur de la Première Lettre:</label>
-                    <input type="color" id="firstLetterColor" value="#667eea">
-                </div>
-
-                <div class="setting-group">
-                    <label for="firstLetterSizeRatio">Ratio de Taille de la Première Lettre:</label>
-                    <input type="number" id="firstLetterSizeRatio" value="1" min="1.0" max="3.0" step="0.1">
-                </div>
-
-                <div class="setting-group">
-                    <label for="picturePosition">Layout:</label>
-                    <div class="toggle-container">
-                        <span class="toggle-label">Vertical</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="picturePosition">
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label">Horizontal</span>
-                    </div>
-                </div>
-
-                <div class="setting-group">
-                    <label for="pictureDiameter">Diamètre de l'Image (px):</label>
-                    <input type="number" id="pictureDiameter" value="120" min="40" max="200" step="5">
-                </div>
-
-                <div class="setting-group">
-                    <label for="showImages">Afficher les Images:</label>
-                    <div class="toggle-container">
-                        <span class="toggle-label">Masquer</span>
-                        <label class="toggle-switch">
-                            <input type="checkbox" id="showImages" checked>
-                            <span class="toggle-slider"></span>
-                        </label>
-                        <span class="toggle-label">Afficher</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="input-panel">
-                <h2>Données des Badges</h2>
-                
-                <div class="drop-zone" id="dropZone">
-                    <div class="drop-zone-content">
-                        <div class="drop-zone-icon">📁</div>
-                        <div class="drop-zone-text">
-                            <h3>Glissez-déposez vos fichiers ici</h3>
-                            <p>ou cliquez pour sélectionner des fichiers</p>
-                            <small>Accepte les fichiers CSV (noms) ou les images (noms extraits des fichiers)</small>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="input-controls">
-                    <button id="clearAll" class="btn btn-secondary">Tout Effacer</button>
-                    <button id="importCSV" class="btn btn-secondary">Importer CSV</button>
-                </div>
-
-                <div class="table-container">
-                    <table id="badgeTable">
-                        <thead>
-                            <tr>
-                                <th>Prénom</th>
-                                <th>Image</th>
-                                <th>Genre</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="badgeTableBody">
-                            <tr>
-                                <td><input type="text" class="name-input" placeholder="Entrez le prénom"></td>
-                                <td>
-                                    <div class="image-input-container">
-                                        <input type="checkbox" class="show-picture-checkbox" checked>
-                                        <input type="file" class="picture-input" accept="image/*">
-                                        <div class="image-preview"></div>
-                                    </div>
-                                </td>
-                                <td><select class="gender-select"><option value="genderless">Sans Genre</option><option value="boy">Garçon</option><option value="girl">Fille</option></select></td>
-                                <td><button class="btn btn-danger remove-row">Supprimer</button></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-
-                <div class="generate-section">
-                    <button id="generatePDF" class="btn btn-success">Générer PDF</button>
-                    <div class="preview-info">
-                        <span id="badgeCount">1 badge</span> • 
-                        <span id="pageCount">1 page</span>
-                    </div>
-                </div>
-            </div>
-
-            <div class="preview-panel">
-                <h2>Aperçu</h2>
-                <div id="badgePreview" class="badge-preview"></div>
-            </div>
+        <div class="footer">
+            <p>© 2024 - Générateurs d'Étiquettes et de Mots</p>
         </div>
     </div>
-
-    <script src="script.js"></script>
 </body>
 </html>

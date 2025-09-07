@@ -265,12 +265,15 @@ class LetterSquaresGenerator {
                     try {
                         // Convert the square to canvas
                         const canvas = await html2canvas(squareElement, {
-                            scale: 2,
+                            scale: 4, // Résolution 4x pour impression 300 DPI professionnelle
                             backgroundColor: 'white',
                             width: squareSizePx,
                             height: squareSizePx,
                             useCORS: true,
-                            allowTaint: true
+                            allowTaint: true,
+                            logging: false,
+                            removeContainer: false, // Garder le conteneur pour éviter les problèmes
+                            imageTimeout: 0 // Pas de timeout pour les images
                         });
 
                         const imgData = canvas.toDataURL('image/png');

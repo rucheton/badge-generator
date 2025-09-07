@@ -10,6 +10,7 @@ class BadgeGenerator {
             fontSize: 40,
             firstLetterColor: '#667eea',
             firstLetterSizeRatio: 1,
+            printQuality: 4, // Qualité d'impression par défaut (300 DPI)
             picturePosition: 'top',
             pictureDiameter: 120,
             showImages: true
@@ -132,6 +133,12 @@ class BadgeGenerator {
             this.settings.height = parseFloat(e.target.value);
             this.saveData();
             this.updatePreview();
+        });
+
+        // Qualité d'impression
+        document.getElementById('qualitySelect').addEventListener('change', (e) => {
+            this.settings.printQuality = parseInt(e.target.value);
+            this.saveData();
         });
 
         document.getElementById('borderColor').addEventListener('change', (e) => {
@@ -1206,6 +1213,11 @@ class BadgeGenerator {
                     this.settings = { ...this.settings, ...data.settings };
                     document.getElementById('badgeWidth').value = this.settings.width;
                     document.getElementById('badgeHeight').value = this.settings.height;
+                    
+                    // Charger la qualité d'impression
+                    if (this.settings.printQuality) {
+                        document.getElementById('qualitySelect').value = this.settings.printQuality;
+                    }
                     document.getElementById('borderColor').value = this.settings.borderColor;
                     document.getElementById('borderRadius').value = this.settings.borderRadius;
                     document.getElementById('borderWidth').value = this.settings.borderWidth;
@@ -1376,12 +1388,18 @@ class BadgeGenerator {
                         hasPicture: !!badge.picture
                     });
                     
+                    // Récupérer la qualité sélectionnée
+                    const qualitySelect = document.getElementById('qualitySelect');
+                    const selectedScale = parseInt(qualitySelect.value);
+                    
                     const canvas = await html2canvas(badgeElement, {
-                        scale: 2,
+                        scale: selectedScale, // Qualité sélectionnée par l'utilisateur
                         backgroundColor: 'white',
                         useCORS: true,
                         allowTaint: true,
                         logging: false,
+                        removeContainer: false, // Garder le conteneur pour éviter les problèmes
+                        imageTimeout: 0, // Pas de timeout pour les images
                         width: undefined, // Let html2canvas determine natural width
                         height: undefined // Let html2canvas determine natural height
                     });
