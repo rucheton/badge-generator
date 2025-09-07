@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Mots - Carnet de Liaison</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #2d3748;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 1.1em;
+        }
+
+        input[type="text"], input[type="number"] {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 16px;
+            transition: border-color 0.3s ease;
+        }
+
+        input[type="text"]:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .preview {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f7fafc;
+            border-radius: 8px;
+            border: 2px dashed #e2e8f0;
+            text-align: center;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .preview-content {
+            font-size: 18px;
+            color: #4a5568;
+        }
+
+        .preview-word {
+            font-size: 24px;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .preview-count {
+            font-size: 16px;
+            color: #718096;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .container {
+                box-shadow: none;
+                border-radius: 0;
+                padding: 0;
+            }
+            
+            .form-group, .btn, h1 {
+                display: none;
+            }
+            
+            .preview {
+                border: none;
+                background: white;
+                margin: 0;
+                padding: 0;
+            }
+        }
+
+        /* Styles pour le PDF */
+        .pdf-page {
+            width: 29.7cm; /* A4 width */
+            height: 21cm; /* A4 height */
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0;
+            padding: 1cm;
+            background: white;
+            box-sizing: border-box;
+        }
+
+        .word-item {
+            width: 13.35cm; /* Half of A4 width minus margins */
+            height: 9.5cm; /* Half of A4 height minus margins */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px solid #e2e8f0;
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            page-break-inside: avoid;
+        }
+
+        .word-text {
+            font-size: 12px;
+            font-weight: normal;
+            text-align: left;
+            color: #2d3748;
+            word-wrap: break-word;
+            max-width: 100%;
+            line-height: 1.3;
+        }
+
+        .word-text strong {
+            font-weight: bold;
+        }
+
+        .word-text u {
+            text-decoration: underline;
+        }
+
+        .word-text br {
+            line-height: 1.2;
+        }
+
+        /* Styles pour l'éditeur de texte enrichi */
+        .editor-container {
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.3s ease;
+        }
+
+        .editor-container:focus-within {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .editor-toolbar {
+            background: #f7fafc;
+            border-bottom: 1px solid #e2e8f0;
+            padding: 8px 12px;
+            display: flex;
+            gap: 8px;
+        }
+
+        .toolbar-btn {
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            padding: 6px 10px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: bold;
+            color: #4a5568;
+            transition: all 0.2s ease;
+            min-width: 32px;
+            height: 32px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .toolbar-btn:hover {
+            background: #edf2f7;
+            border-color: #cbd5e0;
+        }
+
+        .toolbar-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .editor-content {
+            min-height: 60px;
+            padding: 12px 16px;
+            font-size: 16px;
+            line-height: 1.5;
+            outline: none;
+            background: white;
+            color: #2d3748;
+            word-wrap: break-word;
+            white-space: pre-wrap;
+        }
+
+        .editor-content:empty:before {
+            content: attr(placeholder);
+            color: #a0aec0;
+            font-style: italic;
+        }
+
+        .editor-content:focus {
+            outline: none;
+        }
+
+        /* Styles pour le contenu formaté */
+        .editor-content strong {
+            font-weight: bold;
+        }
+
+        .editor-content u {
+            text-decoration: underline;
+        }
+
+        /* Styles pour l'aperçu */
+        .preview-word {
+            font-size: 16px;
+            font-weight: normal;
+            text-align: left;
+            color: #2d3748;
+            word-wrap: break-word;
+            max-width: 100%;
+            line-height: 1.2;
+            padding: 10px;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background: #f8f9fa;
+            min-height: 60px;
+        }
+
+        .preview-word strong {
+            font-weight: bold;
+        }
+
+        .preview-word u {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Générateur de Mots - Carnet de Liaison</h1>
+        
+        <div class="form-group">
+            <label for="mot">Mot à imprimer :</label>
+            <div class="editor-container">
+                <div class="editor-toolbar">
+                    <button type="button" class="toolbar-btn" data-command="bold" title="Gras">
+                        <strong>B</strong>
+                    </button>
+                    <button type="button" class="toolbar-btn" data-command="underline" title="Souligné">
+                        <u>U</u>
+                    </button>
+                    <button type="button" class="toolbar-btn" data-command="insertCheckbox" title="Case à cocher (Ctrl+K)">
+                        ☐
+                    </button>
+                </div>
+                <div class="editor-content" id="mot" contenteditable="true" placeholder="Entrez le mot à imprimer..."></div>
+            </div>
+        </div>
+        
+        
+        <button class="btn" id="genererPDF">Générer PDF</button>
+        
+        <div class="preview" id="preview">
+            <div class="preview-content">
+                <div class="preview-word" id="previewWord">Votre mot apparaîtra ici</div>
+                <div class="preview-count" id="previewCount">Maximum de mots sur une page</div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    
+    <script>
+        class MotsCarnetGenerator {
+            constructor() {
+                this.motInput = document.getElementById('mot');
+                this.genererBtn = document.getElementById('genererPDF');
+                this.previewWord = document.getElementById('previewWord');
+                this.previewCount = document.getElementById('previewCount');
+                
+                this.loadSavedWord();
+                this.bindEvents();
+                this.updatePreview();
+            }
+            
+            bindEvents() {
+                // Nettoyer le contenu lors du collage
+                this.motInput.addEventListener('paste', (e) => {
+                    setTimeout(() => {
+                        const cleanedContent = this.cleanHTML(this.motInput.innerHTML);
+                        this.motInput.innerHTML = cleanedContent;
+                        this.saveWord();
+                        this.updatePreview();
+                    }, 10);
+                });
+                
+                // Nettoyer le contenu à chaque modification pour s'assurer de la cohérence
+                this.motInput.addEventListener('input', () => {
+                    setTimeout(() => {
+                        const cleanedContent = this.cleanHTML(this.motInput.innerHTML);
+                        if (cleanedContent !== this.motInput.innerHTML) {
+                            this.motInput.innerHTML = cleanedContent;
+                        }
+                        this.saveWord();
+                        this.updatePreview();
+                    }, 10);
+                });
+                
+                this.genererBtn.addEventListener('click', () => this.genererPDF());
+                
+                // Gestion des boutons de la barre d'outils
+                document.querySelectorAll('.toolbar-btn').forEach(btn => {
+                    btn.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const command = btn.dataset.command;
+                        this.executeCommand(command);
+                    });
+                });
+                
+                // Gestion des raccourcis clavier
+                this.motInput.addEventListener('keydown', (e) => {
+                    if (e.ctrlKey || e.metaKey) {
+                        switch(e.key) {
+                            case 'b':
+                                e.preventDefault();
+                                this.executeCommand('bold');
+                                break;
+                            case 'u':
+                                e.preventDefault();
+                                this.executeCommand('underline');
+                                break;
+                            case 'k':
+                                e.preventDefault();
+                                this.executeCommand('insertCheckbox');
+                                break;
+                        }
+                    }
+                });
+            }
+            
+            executeCommand(command) {
+                switch(command) {
+                    case 'bold':
+                        document.execCommand('bold', false, null);
+                        break;
+                    case 'underline':
+                        document.execCommand('underline', false, null);
+                        break;
+                    case 'insertCheckbox':
+                        document.execCommand('insertHTML', false, '☐ ');
+                        break;
+                }
+                this.saveWord();
+                this.updatePreview();
+            }
+            
+            cleanHTML(html) {
+                // Nettoyage agressif de tout le contenu
+                return html
+                    // Supprimer tous les retours à la ligne et espaces en début/fin
+                    .replace(/^[\s\n\r]+|[\s\n\r]+$/g, '')
+                    // Remplacer les retours à la ligne multiples par un seul <br>
+                    .replace(/\n\s*\n/g, '<br>')
+                    // Remplacer les retours à la ligne simples par des espaces
+                    .replace(/\n/g, ' ')
+                    // Remplacer les espaces multiples par un seul espace
+                    .replace(/\s+/g, ' ')
+                    // Supprimer les balises <br> en début et fin
+                    .replace(/^(<br\s*\/?>)+|(<br\s*\/?>)+$/gi, '')
+                    // Remplacer les <br> multiples par un seul
+                    .replace(/(<br\s*\/?>)+/gi, '<br>')
+                    // Supprimer les espaces autour des <br>
+                    .replace(/\s*<br\s*\/?>\s*/gi, '<br>')
+                    // Supprimer les espaces en début et fin après nettoyage
+                    .trim();
+            }
+            
+            saveWord() {
+                const mot = this.cleanHTML(this.motInput.innerHTML);
+                if (mot && mot !== '<br>') {
+                    localStorage.setItem('motsCarnet_lastWord', mot);
+                }
+            }
+            
+            loadSavedWord() {
+                const savedWord = localStorage.getItem('motsCarnet_lastWord');
+                if (savedWord) {
+                    this.motInput.innerHTML = savedWord;
+                }
+            }
+            
+            updatePreview() {
+                const mot = this.cleanHTML(this.motInput.innerHTML);
+                
+                if (mot && mot !== '<br>') {
+                    this.previewWord.innerHTML = mot;
+                } else {
+                    this.previewWord.textContent = 'Votre mot apparaîtra ici';
+                }
+                
+                this.previewCount.textContent = 'Maximum de mots sur une page';
+            }
+            
+            async genererPDF() {
+                const mot = this.cleanHTML(this.motInput.innerHTML);
+                
+                if (!mot || mot === '<br>') {
+                    alert('Veuillez entrer un mot à imprimer.');
+                    return;
+                }
+                
+                // Afficher l'état de chargement
+                this.genererBtn.textContent = 'Génération en cours...';
+                this.genererBtn.disabled = true;
+                
+                try {
+                    // Créer le conteneur pour le PDF
+                    const pdfContainer = document.createElement('div');
+                    pdfContainer.className = 'pdf-page';
+                    pdfContainer.style.position = 'absolute';
+                    pdfContainer.style.left = '-9999px';
+                    pdfContainer.style.top = '0';
+                    document.body.appendChild(pdfContainer);
+                    
+                    // Calculer la hauteur réelle du texte pour déterminer le nombre optimal de mots
+                    const largeurPage = 29.7; // cm
+                    const hauteurPage = 21; // cm
+                    const marge = 1; // cm
+                    const hauteurDisponible = hauteurPage - 2 * marge; // 19cm
+                    
+                    // Créer un wordItem temporaire pour mesurer sa hauteur réelle
+                    const tempWordItem = document.createElement('div');
+                    tempWordItem.style.width = `${(largeurPage - 3 * marge) / 2}cm`; // Largeur d'une colonne
+                    tempWordItem.style.fontSize = '12px';
+                    tempWordItem.style.fontWeight = 'normal';
+                    tempWordItem.style.lineHeight = '1.3';
+                    tempWordItem.style.padding = '0.3cm';
+                    tempWordItem.style.boxSizing = 'border-box';
+                    tempWordItem.style.position = 'absolute';
+                    tempWordItem.style.left = '-9999px';
+                    tempWordItem.style.top = '0';
+                    tempWordItem.innerHTML = mot;
+                    document.body.appendChild(tempWordItem);
+                    
+                    // Mesurer la hauteur réelle du wordItem
+                    const hauteurReellePx = tempWordItem.offsetHeight;
+                    const hauteurReelleCm = hauteurReellePx / 37.7952755906; // Convertir pixels en cm
+                    document.body.removeChild(tempWordItem);
+                    
+                    // Calculer le nombre de mots qui peuvent tenir
+                    const division = hauteurDisponible / hauteurReelleCm;
+                    const motsParColonne = Math.floor(division);
+                    const nombre = motsParColonne * 2; // 2 colonnes
+                    
+                    console.log(`=== CALCUL DÉTAILLÉ ===`);
+                    console.log(`Hauteur disponible: ${hauteurDisponible}cm`);
+                    console.log(`Hauteur réelle d'un wordItem: ${hauteurReelleCm.toFixed(2)}cm (${hauteurReellePx}px)`);
+                    console.log(`Division: ${hauteurDisponible} ÷ ${hauteurReelleCm.toFixed(2)} = ${division.toFixed(2)}`);
+                    console.log(`Math.floor(${division.toFixed(2)}) = ${motsParColonne}`);
+                    console.log(`Mots par colonne: ${motsParColonne}`);
+                    console.log(`Total mots sur la page: ${nombre} (${motsParColonne} × 2 colonnes)`);
+                    console.log(`=== FIN CALCUL ===`);
+                    
+                    // Créer une seule page avec le maximum de mots
+                    const pageContainer = document.createElement('div');
+                    pageContainer.className = 'pdf-page';
+                    pageContainer.style.display = 'grid';
+                    pageContainer.style.gridTemplateColumns = '1fr 1fr';
+                    pageContainer.style.gridAutoRows = 'auto'; // Important pour que chaque mot ait sa propre ligne
+                    pageContainer.style.gap = '0.2cm'; // Réduire l'espace entre les mots
+                    pageContainer.style.width = '29.7cm';
+                    pageContainer.style.height = '21cm';
+                    pageContainer.style.padding = '1cm';
+                    pageContainer.style.background = 'white';
+                    pageContainer.style.boxSizing = 'border-box';
+                    pageContainer.style.overflow = 'visible';
+                    pageContainer.style.position = 'relative'; // Pour le debug
+                    
+                    // Créer tous les mots pour cette page
+                    console.log(`=== CRÉATION DES MOTS ===`);
+                    let motsCrees = 0;
+                    
+                    for (let i = 0; i < nombre; i++) {
+                        const wordItem = document.createElement('div');
+                        wordItem.className = 'word-item';
+                        wordItem.style.width = '100%';
+                        wordItem.style.minHeight = 'auto';
+                        wordItem.style.height = 'auto'; // S'assurer que la hauteur s'adapte au contenu
+                        wordItem.style.display = 'flex';
+                        wordItem.style.alignItems = 'flex-start';
+                        wordItem.style.justifyContent = 'flex-start';
+                        wordItem.style.border = 'none';
+                        wordItem.style.margin = '0';
+                        wordItem.style.padding = '0.3cm';
+                        wordItem.style.boxSizing = 'border-box';
+                        wordItem.style.pageBreakInside = 'avoid';
+                        wordItem.style.position = 'relative'; // Pour éviter les superpositions
+                        wordItem.style.zIndex = '1'; // S'assurer que chaque mot est visible
+                        wordItem.style.background = 'transparent'; // Pas de background qui cache
+                        
+                        // Pas de bordures pour le rendu final
+                        
+                        const wordText = document.createElement('div');
+                        wordText.className = 'word-text';
+                        wordText.style.fontSize = '12px';
+                        wordText.style.fontWeight = 'normal';
+                        wordText.style.textAlign = 'left';
+                        wordText.style.color = '#2d3748';
+                        wordText.style.wordWrap = 'break-word';
+                        wordText.style.maxWidth = '100%';
+                        wordText.style.lineHeight = '1.3';
+                        wordText.innerHTML = mot;
+                        
+                        wordItem.appendChild(wordText);
+                        pageContainer.appendChild(wordItem);
+                        motsCrees++;
+                        
+                        if (i < 10 || i % 10 === 0) {
+                            console.log(`Mot ${i + 1} créé et ajouté au conteneur (colonne ${i % 2 === 0 ? 'gauche' : 'droite'})`);
+                        }
+                    }
+                    
+                    console.log(`Total mots créés: ${motsCrees} sur ${nombre} demandés`);
+                    console.log(`Nombre d'enfants dans pageContainer: ${pageContainer.children.length}`);
+                    console.log(`=== FIN CRÉATION ===`);
+                    
+                    pdfContainer.appendChild(pageContainer);
+                    
+                    // Générer le PDF
+                    const { jsPDF } = window.jspdf;
+                    const pdf = new jsPDF('l', 'cm', 'a4'); // Format A4 horizontal
+                    
+                    // Convertir chaque page en image et l'ajouter au PDF
+                    const pages = pdfContainer.querySelectorAll('.pdf-page');
+                    console.log(`=== GÉNÉRATION PDF ===`);
+                    console.log(`Nombre de pages à convertir: ${pages.length}`);
+                    
+                    for (let i = 0; i < pages.length; i++) {
+                        if (i > 0) {
+                            pdf.addPage();
+                        }
+                        
+                        const pageElement = pages[i];
+                        console.log(`Page ${i + 1}: ${pageElement.children.length} mots dans le DOM`);
+                        
+                        const canvas = await html2canvas(pageElement, {
+                            scale: 3, // Résolution 3x pour impression haute qualité
+                            backgroundColor: 'white',
+                            width: 29.7 * 37.7952755906, // Convertir cm en pixels
+                            height: 21 * 37.7952755906,
+                            useCORS: true,
+                            allowTaint: true,
+                            logging: false,
+                            removeContainer: false, // Garder le conteneur pour éviter les problèmes
+                            imageTimeout: 0 // Pas de timeout pour les images
+                        });
+                        
+                        console.log(`Canvas généré: ${canvas.width}x${canvas.height}px`);
+                        const imgData = canvas.toDataURL('image/png');
+                        pdf.addImage(imgData, 'PNG', 0, 0, 29.7, 21);
+                        console.log(`Page ${i + 1} ajoutée au PDF`);
+                    }
+                    
+                    console.log(`=== FIN GÉNÉRATION PDF ===`);
+                    
+                    // Nettoyer
+                    document.body.removeChild(pdfContainer);
+                    
+                    // Télécharger le PDF
+                    const today = new Date();
+                    const dateStr = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
+                    pdf.save(`mots-carnet-${dateStr}.pdf`);
+                    
+                } catch (error) {
+                    console.error('Erreur lors de la génération du PDF:', error);
+                    alert('Une erreur est survenue lors de la génération du PDF.');
+                } finally {
+                    // Restaurer le bouton
+                    this.genererBtn.textContent = 'Générer PDF';
+                    this.genererBtn.disabled = false;
+                }
+            }
+        }
+        
+        // Initialiser l'application
+        document.addEventListener('DOMContentLoaded', () => {
+            new MotsCarnetGenerator();
+        });
+    </script>
+</body>
+</html>
