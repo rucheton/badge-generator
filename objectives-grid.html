@@ -152,6 +152,25 @@
                 <textarea id="objectiveInstruction" placeholder="Décrivez la consigne ou l'activité..."></textarea>
             </div>
 
+            <div class="form-group">
+                <label for="csvFile">Import CSV (optionnel) :</label>
+                <input type="file" id="csvFile" accept=".csv" onchange="handleCSVImport(event)">
+                <small>Format attendu : même que badge generator (première colonne = prénom)</small>
+            </div>
+
+            <div class="form-group">
+                <label for="useDate">Préremplir la date :</label>
+                <input type="date" id="useDate">
+                <small>Laissez vide pour laisser les cases date vides</small>
+            </div>
+
+            <div class="form-group">
+                <label for="previewMode">Mode de génération :</label>
+                <select id="previewMode">
+                    <option value="single">Une grille vide (mode normal)</option>
+                    <option value="csv">Une grille par prénom du CSV</option>
+                </select>
+            </div>
 
             <button class="btn-generate" id="generatePDF" onclick="generatePDF()">Générer le PDF</button>
         </div>
