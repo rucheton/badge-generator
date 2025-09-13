@@ -107,17 +107,25 @@
         }
 
         .setting-group input,
-        .setting-group select {
+        .setting-group select,
+        .setting-group textarea {
             width: 100%;
             padding: 0.75rem;
             border: 2px solid #ddd;
             border-radius: 8px;
             font-size: 1rem;
             transition: border-color 0.3s ease;
+            font-family: inherit;
+        }
+
+        .setting-group textarea {
+            min-height: 80px;
+            resize: vertical;
         }
 
         .setting-group input:focus,
-        .setting-group select:focus {
+        .setting-group select:focus,
+        .setting-group textarea:focus {
             outline: none;
             border-color: #667eea;
             box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
@@ -161,6 +169,7 @@
         .btn-danger:hover {
             box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
         }
+
 
         .spinner {
             margin-left: 8px;
@@ -347,6 +356,56 @@
             header h1 {
                 font-size: 2rem;
             }
+
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                padding: 0 !important;
+            }
+            
+            .container {
+                max-width: none !important;
+                padding: 0 !important;
+            }
+            
+            .nav-link,
+            .control-panel,
+            .stats,
+            #namesPanel {
+                display: none !important;
+            }
+            
+            .main-content {
+                grid-template-columns: 1fr !important;
+                gap: 0 !important;
+                margin: 0 !important;
+            }
+            
+            .visualization-area {
+                background: white !important;
+                padding: 0 !important;
+                box-shadow: none !important;
+                border-radius: 0 !important;
+                min-height: auto !important;
+            }
+            
+            .word-cloud-container {
+                border: none !important;
+                background: white !important;
+                border-radius: 0 !important;
+                min-height: auto !important;
+                padding: 20px !important;
+            }
+            
+            .word-item {
+                text-shadow: none !important;
+            }
+            
+            header {
+                display: none !important;
+            }
         }
     </style>
 </head>
@@ -368,6 +427,14 @@
                     <label for="csvFile">Fichier CSV :</label>
                     <input type="file" id="csvFile" accept=".csv" />
                     <div id="csvStatus" style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;"></div>
+                </div>
+
+                <div class="setting-group">
+                    <label for="manualNames">Ajouter des prénoms manuellement :</label>
+                    <textarea id="manualNames" placeholder="Entrez les prénoms séparés par des virgules ou des retours à la ligne..."></textarea>
+                    <button id="addManualNames" class="btn" style="margin-top: 0.5rem; width: 100%;">
+                        Ajouter les prénoms
+                    </button>
                 </div>
 
                 <div class="setting-group">
@@ -408,9 +475,8 @@
                     <span id="previewSpinner" class="spinner" style="display: none; margin-left: 0.5rem;">⏳</span>
                 </div>
 
-                <button id="exportPDF" class="btn" style="display: none;">
-                    <span id="exportText">Exporter en PDF</span>
-                    <span id="exportSpinner" class="spinner" style="display: none;">⏳</span>
+                <button id="printDirect" class="btn btn-success" style="display: none;">
+                    🖨️ Imprimer directement
                 </button>
 
                 <button id="clearData" class="btn btn-danger" style="display: none;">
@@ -449,8 +515,6 @@
         </div>
     </div>
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <script src="word-cloud.js"></script>
 </body>
 </html>

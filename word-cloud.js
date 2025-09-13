@@ -35,7 +35,8 @@ class WordCloudGenerator {
         document.getElementById('colorScheme').addEventListener('change', (e) => this.updateSetting('colorScheme', e.target.value));
         document.getElementById('textCase').addEventListener('change', (e) => this.updateSetting('textCase', e.target.value));
         document.getElementById('highlightMultiplier').addEventListener('input', (e) => this.updateSetting('highlightMultiplier', parseInt(e.target.value)));
-        document.getElementById('exportPDF').addEventListener('click', () => this.exportToPDF());
+        document.getElementById('printDirect').addEventListener('click', () => this.printDirect());
+        document.getElementById('addManualNames').addEventListener('click', () => this.addManualNames());
         document.getElementById('clearData').addEventListener('click', () => this.clearAllData());
     }
 
@@ -295,7 +296,7 @@ class WordCloudGenerator {
             this.wordCloudContainer.classList.remove('has-content');
             this.namesPanel.style.display = 'none';
             this.stats.style.display = 'none';
-            document.getElementById('exportPDF').style.display = 'none';
+            document.getElementById('printDirect').style.display = 'none';
             document.getElementById('clearData').style.display = 'none';
             document.getElementById('csvStatus').textContent = '';
             document.getElementById('csvFile').value = '';
@@ -344,8 +345,8 @@ class WordCloudGenerator {
             // Generate word cloud
             this.createWordCloud(words);
             
-            // Show export button
-            document.getElementById('exportPDF').style.display = 'inline-block';
+            // Show print button
+            document.getElementById('printDirect').style.display = 'inline-block';
             
         } catch (error) {
             console.error('Error generating word cloud:', error);
@@ -573,321 +574,24 @@ class WordCloudGenerator {
     }
 
 
-    async exportToPDF() {
-        if (!this.wordCloudContainer.classList.contains('has-content')) {
-            alert('Veuillez d\'abord générer un nuage de mots.');
-            return;
-        }
-
-        this.setExportLoadingState(true);
-
-        try {
-            // Get the words data
-            const words = this.prepareWords();
-            if (words.length === 0) {
-                alert('Aucun mot à exporter.');
-                return;
-            }
-
-            // Create PDF with vector rendering
-            const { jsPDF } = window.jspdf;
-            const pdf = new jsPDF('p', 'mm', 'a4');
-            
-            // PDF dimensions - optimize A4 space usage
-            const pdfWidth = pdf.internal.pageSize.getWidth(); // 210mm
-            const pdfHeight = pdf.internal.pageSize.getHeight(); // 297mm
-            const margin = 15; // Reduced margin for better space usage
-            const availableWidth = pdfWidth - (2 * margin); // 180mm
-            const availableHeight = pdfHeight - (2 * margin); // 267mm
-            
-            // Set up font to match preview (using helvetica as closest match to Segoe UI)
-            pdf.setFont('helvetica', 'bold');
-            
-            // Get the actual font size from preview for better matching
-            const previewFontSize = this.getPreviewFontSize();
-            
-            // Get the actual positions and font sizes from the preview elements
-            const wordElements = this.wordCloudContainer.querySelectorAll('.word-item');
-            const wordData = new Map();
-            
-            // Map each word to its actual position and font size from the preview
-            wordElements.forEach(element => {
-                const word = element.textContent;
-                const computedStyle = window.getComputedStyle(element);
-                const fontSize = parseFloat(computedStyle.fontSize);
-                const rect = element.getBoundingClientRect();
-                const containerRect = this.wordCloudContainer.getBoundingClientRect();
-                
-                // Calculate relative position within the container
-                const x = rect.left - containerRect.left;
-                const y = rect.top - containerRect.top;
-                
-                wordData.set(word, {
-                    fontSize: fontSize,
-                    x: x,
-                    y: y,
-                    width: rect.width,
-                    height: rect.height
-                });
-            });
-            
-            // Get colors
-            const colors = this.colorSchemes[this.settings.colorScheme];
-            
-            // Convert words to positioned elements for PDF using actual preview positions
-            const positionedWords = [];
-            const spacing = 12; // mm minimum spacing between words
-            
-            words.forEach((wordObj, index) => {
-                const word = typeof wordObj === 'string' ? wordObj : wordObj.word;
-                const data = wordData.get(word);
-                
-                if (data) {
-                    // Convert pixel positions to mm for PDF
-                    let x = this.convertPixelToMM(data.x);
-                    let y = this.convertPixelToMM(data.y);
-                    const fontSize = data.fontSize;
-                    const color = colors[index % colors.length];
-                    
-                    // Calculate actual dimensions based on PDF font size
-                    const actualWidth = this.measureTextWidth(pdf, word, fontSize);
-                    const actualHeight = fontSize * 1.2; // Approximate height based on font size
-                    
-                    // Check for collisions and adjust position if needed
-                    const adjustedPosition = this.adjustPositionForCollisions(x, y, actualWidth, actualHeight, positionedWords, spacing);
-                    x = adjustedPosition.x;
-                    y = adjustedPosition.y;
-                    
-                    positionedWords.push({
-                        word: word,
-                        x: x,
-                        y: y,
-                        fontSize: fontSize,
-                        color: color,
-                        width: actualWidth,
-                        height: actualHeight
-                    });
-                }
-            });
-            
-            // Render words to PDF
-            positionedWords.forEach(({ word, x, y, fontSize, color }) => {
-                // Set font size
-                pdf.setFontSize(fontSize);
-                
-                // Set color
-                if (this.settings.colorScheme === 'black-red-initial') {
-                    // Handle special color scheme
-                    const firstLetter = word.charAt(0);
-                    const restOfWord = word.slice(1);
-                    
-                    // First letter in red
-                    pdf.setTextColor(231, 76, 60); // #e74c3c
-                    pdf.text(firstLetter, margin + x, margin + y);
-                    
-                    // Rest in black
-                    if (restOfWord) {
-                        pdf.setTextColor(0, 0, 0);
-                        // Measure the actual width of the first letter
-                        const firstLetterWidth = this.measureTextWidth(pdf, firstLetter, fontSize);
-                        pdf.text(restOfWord, margin + x + firstLetterWidth, margin + y);
-                    }
-                } else {
-                    // Regular color
-                    const rgb = this.hexToRgb(color);
-                    pdf.setTextColor(rgb.r, rgb.g, rgb.b);
-                    pdf.text(word, margin + x, margin + y);
-                }
-            });
-            
-            // Save PDF
-            const today = new Date().toISOString().split('T')[0];
-            pdf.save(`nuage-mots-${today}.pdf`);
-            
-        } catch (error) {
-            console.error('Error exporting PDF:', error);
-            alert('Erreur lors de l\'export PDF.');
-        } finally {
-            this.setExportLoadingState(false);
-        }
-    }
+    // Méthode exportToPDF supprimée
 
 
-    setExportLoadingState(isLoading) {
-        const exportBtn = document.getElementById('exportPDF');
-        const exportText = document.getElementById('exportText');
-        const exportSpinner = document.getElementById('exportSpinner');
-        
-        if (isLoading) {
-            exportBtn.disabled = true;
-            exportText.textContent = 'Export...';
-            exportSpinner.style.display = 'inline';
-        } else {
-            exportBtn.disabled = false;
-            exportText.textContent = 'Exporter en PDF';
-            exportSpinner.style.display = 'none';
-        }
-    }
+    // setExportLoadingState supprimée
 
-    getPreviewFontSize() {
-        // Get the actual font size from a word element in the preview
-        const wordElements = this.wordCloudContainer.querySelectorAll('.word-item');
-        if (wordElements.length > 0) {
-            const computedStyle = window.getComputedStyle(wordElements[0]);
-            return parseFloat(computedStyle.fontSize);
-        }
-        return 16; // Default fallback
-    }
+    // getPreviewFontSize supprimée
 
-    convertPixelToMM(pixelSize) {
-        // Direct conversion from pixels to mm (96 DPI: 1 inch = 25.4mm, 96 pixels = 1 inch)
-        return (pixelSize * 25.4) / 96;
-    }
+    // convertPixelToMM supprimée
 
-    measureTextWidth(pdf, text, fontSize) {
-        // Use jsPDF's built-in text measurement
-        // Set the font size temporarily to measure
-        const currentFontSize = pdf.internal.getFontSize();
-        pdf.setFontSize(fontSize);
-        
-        // Get the text width in the current units (mm)
-        const textWidth = pdf.getTextWidth(text);
-        
-        // Restore the original font size
-        pdf.setFontSize(currentFontSize);
-        
-        return textWidth;
-    }
+    // measureTextWidth supprimée
 
-    adjustPositionForCollisions(x, y, width, height, placedWords, spacing) {
-        // Check if the current position collides with any placed words using hit testing
-        if (!this.checkPDFCollision(x, y, width, height, placedWords, spacing)) {
-            return { x, y }; // No collision, use original position
-        }
-        
-        // Try to find a nearby position without collision
-        const maxAttempts = 150; // More attempts to guarantee no overlap
-        const stepSize = 1; // mm (smaller steps for precision)
-        
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            // Try positions in a spiral pattern around the original position
-            const angle = (attempt * Math.PI * 2) / 8; // 8 directions
-            const distance = Math.floor(attempt / 8) * stepSize;
-            
-            const newX = x + Math.cos(angle) * distance;
-            const newY = y + Math.sin(angle) * distance;
-            
-            // Check if this position is valid (within bounds and no collision)
-            // Use optimized A4 space with proper margins
-            const edgeMargin = 15; // mm margin from edges (matches PDF margin)
-            if (newX >= edgeMargin && newY >= edgeMargin && newX + width <= 195 && newY + height <= 282) {
-                // Use hit testing to check against all placed words
-                if (!this.checkPDFCollision(newX, newY, width, height, placedWords, spacing)) {
-                    return { x: newX, y: newY };
-                }
-            }
-        }
-        
-        // If no good position found, return original position
-        return { x, y };
-    }
+    // adjustPositionForCollisions supprimée
 
-    estimateTextWidth(text, fontSize) {
-        // More accurate estimation of text width in mm
-        // Helvetica bold has different character widths, so we use a more precise calculation
-        let totalWidth = 0;
-        for (let i = 0; i < text.length; i++) {
-            const char = text[i];
-            // Different characters have different widths in Helvetica
-            if (char === 'I' || char === 'l' || char === 'i' || char === 't' || char === 'f' || char === 'j') {
-                totalWidth += fontSize * 0.3; // Narrow characters
-            } else if (char === 'W' || char === 'M' || char === 'Q' || char === 'O' || char === 'D' || char === 'G') {
-                totalWidth += fontSize * 0.9; // Wide characters
-            } else {
-                totalWidth += fontSize * 0.6; // Average characters
-            }
-        }
-        return totalWidth;
-    }
+    // estimateTextWidth supprimée
 
-    findPDFPosition(word, fontSize, placedWords, containerWidth, containerHeight, spacing) {
-        const wordWidth = this.estimateTextWidth(word, fontSize);
-        const wordHeight = fontSize;
-        
-        // Try multiple positions
-        const maxAttempts = 100;
-        let bestPosition = { x: 0, y: 0 };
-        let bestScore = -1;
-        
-        for (let attempt = 0; attempt < maxAttempts; attempt++) {
-            const x = Math.random() * Math.max(0, containerWidth - wordWidth);
-            const y = Math.random() * Math.max(0, containerHeight - wordHeight);
-            
-            // Check for collisions
-            let hasCollision = false;
-            for (const placed of placedWords) {
-                if (this.checkPDFCollision(x, y, wordWidth, wordHeight, placed, spacing)) {
-                    hasCollision = true;
-                    break;
-                }
-            }
-            
-            if (!hasCollision) {
-                // Calculate score based on distance from center
-                const centerX = containerWidth / 2;
-                const centerY = containerHeight / 2;
-                const distanceFromCenter = Math.sqrt(
-                    Math.pow(x + wordWidth/2 - centerX, 2) + 
-                    Math.pow(y + wordHeight/2 - centerY, 2)
-                );
-                const score = 1 / (1 + distanceFromCenter / 50);
-                
-                if (score > bestScore) {
-                    bestScore = score;
-                    bestPosition = { x, y };
-                }
-            }
-        }
-        
-        // If no good position found, use center
-        if (bestScore === -1) {
-            bestPosition = {
-                x: Math.max(0, (containerWidth - wordWidth) / 2),
-                y: Math.max(0, (containerHeight - wordHeight) / 2)
-            };
-        }
-        
-        return bestPosition;
-    }
+    // findPDFPosition supprimée
 
-    checkPDFCollision(x1, y1, w1, h1, placedWords, spacing = 0) {
-        // Hit testing: check against ALL placed words
-        for (const placed of placedWords) {
-            const x2 = placed.x - spacing;
-            const y2 = placed.y - spacing;
-            const w2 = placed.width + (spacing * 2);
-            const h2 = placed.height + (spacing * 2);
-            
-            // Check if rectangles overlap with strict boundaries
-            const overlaps = !(x1 + w1 <= x2 || x2 + w2 <= x1 || y1 + h1 <= y2 || y2 + h2 <= y1);
-            
-            if (overlaps) {
-                return true; // Collision detected
-            }
-        }
-        
-        return false; // No collision
-    }
-
-    hexToRgb(hex) {
-        // Convert hex color to RGB
-        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-        return result ? {
-            r: parseInt(result[1], 16),
-            g: parseInt(result[2], 16),
-            b: parseInt(result[3], 16)
-        } : { r: 0, g: 0, b: 0 };
-    }
+    // checkPDFCollision et hexToRgb supprimées
 
     setPreviewLoadingState(isLoading) {
         const statusText = document.getElementById('previewStatusText');
@@ -900,6 +604,81 @@ class WordCloudGenerator {
             statusText.textContent = 'Aperçu automatique activé';
             previewSpinner.style.display = 'none';
         }
+    }
+
+    // Imprimer directement le nuage de mots
+    printDirect() {
+        // Vérifier qu'il y a du contenu à imprimer
+        if (!this.wordCloudContainer.classList.contains('has-content')) {
+            alert('Aucun nuage de mots à imprimer. Veuillez d\'abord importer des données.');
+            return;
+        }
+
+        // Désactiver temporairement les interactions pendant l'impression
+        const wordItems = this.wordCloudContainer.querySelectorAll('.word-item');
+        wordItems.forEach(item => {
+            item.style.pointerEvents = 'none';
+        });
+
+        // Lancer l'impression
+        window.print();
+
+        // Réactiver les interactions après l'impression
+        setTimeout(() => {
+            wordItems.forEach(item => {
+                item.style.pointerEvents = 'auto';
+            });
+        }, 1000);
+    }
+
+    // Ajouter des prénoms manuellement
+    addManualNames() {
+        const manualNamesInput = document.getElementById('manualNames');
+        const namesText = manualNamesInput.value.trim();
+        
+        if (!namesText) {
+            alert('Veuillez entrer au moins un prénom.');
+            return;
+        }
+
+        // Parser les prénoms (séparés par virgules, points-virgules, ou retours à la ligne)
+        const names = namesText
+            .split(/[,;\n\r]+/)
+            .map(name => name.trim())
+            .filter(name => name.length > 0);
+
+        if (names.length === 0) {
+            alert('Aucun prénom valide trouvé.');
+            return;
+        }
+
+        // Ajouter les nouveaux prénoms à la liste existante
+        names.forEach(name => {
+            if (!this.names.includes(name)) {
+                this.names.push(name);
+                this.nameStates[name] = {
+                    hidden: false,
+                    highlighted: false,
+                    count: 1
+                };
+            } else {
+                // Incrémenter le compteur si le prénom existe déjà
+                this.nameStates[name].count++;
+            }
+        });
+
+        // Vider le champ de saisie
+        manualNamesInput.value = '';
+
+        // Sauvegarder les données
+        this.saveData();
+
+        // Mettre à jour l'affichage
+        this.updateNamesList();
+        this.generateWordCloud();
+
+        // Afficher un message de confirmation
+        alert(`${names.length} prénom(s) ajouté(s) avec succès !`);
     }
 }
 

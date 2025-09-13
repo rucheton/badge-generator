@@ -113,6 +113,51 @@
             transform: none;
         }
 
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-generate, .btn-print {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .btn-generate {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-generate:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-print {
+            background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+            color: white;
+        }
+
+        .btn-print:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-generate:disabled, .btn-print:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
         .preview {
             margin-top: 30px;
             padding: 20px;
@@ -317,6 +362,17 @@
         .preview-word u {
             text-decoration: underline;
         }
+
+        @media (max-width: 768px) {
+            .form-actions {
+                flex-direction: column;
+                gap: 10px;
+            }
+            
+            .btn-generate, .btn-print {
+                width: 100%;
+            }
+        }
     </style>
 </head>
 <body>
@@ -345,7 +401,10 @@
         </div>
         
         
-        <button class="btn" id="genererPDF">Générer PDF</button>
+        <div class="form-actions">
+            <button class="btn-generate" id="genererPDF">Télécharger le PDF</button>
+            <button class="btn-print" id="imprimerPDF">Imprimer le PDF</button>
+        </div>
         
         <div class="preview" id="preview">
             <div class="preview-content">
@@ -363,6 +422,7 @@
             constructor() {
                 this.motInput = document.getElementById('mot');
                 this.genererBtn = document.getElementById('genererPDF');
+                this.imprimerBtn = document.getElementById('imprimerPDF');
                 this.previewWord = document.getElementById('previewWord');
                 this.previewCount = document.getElementById('previewCount');
                 
@@ -376,16 +436,6 @@
                 this.motInput.addEventListener('paste', (e) => {
                     setTimeout(() => {
                         const cleanedContent = this.cleanHTML(this.motInput.innerHTML);
-                        this.motInput.innerHTML = cleanedContent;
-                        this.saveWord();
-                        this.updatePreview();
-                    }, 10);
-                });
-                
-                // Nettoyer le contenu à chaque modification pour s'assurer de la cohérence
-                this.motInput.addEventListener('input', () => {
-                    setTimeout(() => {
-                        const cleanedContent = this.cleanHTML(this.motInput.innerHTML);
                         if (cleanedContent !== this.motInput.innerHTML) {
                             this.motInput.innerHTML = cleanedContent;
                         }
@@ -394,7 +444,14 @@
                     }, 10);
                 });
                 
+                // Sauvegarder et mettre à jour l'aperçu sans modifier le contenu
+                this.motInput.addEventListener('input', () => {
+                    this.saveWord();
+                    this.updatePreview();
+                });
+                
                 this.genererBtn.addEventListener('click', () => this.genererPDF());
+                this.imprimerBtn.addEventListener('click', () => this.imprimerPDF());
                 
                 // Gestion des boutons de la barre d'outils
                 document.querySelectorAll('.toolbar-btn').forEach(btn => {
@@ -438,8 +495,11 @@
                         document.execCommand('insertHTML', false, '☐ ');
                         break;
                 }
-                this.saveWord();
-                this.updatePreview();
+                // Délai pour laisser le navigateur traiter la commande
+                setTimeout(() => {
+                    this.saveWord();
+                    this.updatePreview();
+                }, 10);
             }
             
             cleanHTML(html) {
@@ -478,9 +538,9 @@
             }
             
             updatePreview() {
-                const mot = this.cleanHTML(this.motInput.innerHTML);
+                const mot = this.motInput.innerHTML;
                 
-                if (mot && mot !== '<br>') {
+                if (mot && mot !== '<br>' && mot.trim() !== '') {
                     this.previewWord.innerHTML = mot;
                 } else {
                     this.previewWord.textContent = 'Votre mot apparaîtra ici';
@@ -490,6 +550,14 @@
             }
             
             async genererPDF() {
+                await this.createPDF(false);
+            }
+
+            async imprimerPDF() {
+                await this.createPDF(true);
+            }
+
+            async createPDF(shouldPrint = false) {
                 const mot = this.cleanHTML(this.motInput.innerHTML);
                 
                 if (!mot || mot === '<br>') {
@@ -498,8 +566,12 @@
                 }
                 
                 // Afficher l'état de chargement
-                this.genererBtn.textContent = 'Génération en cours...';
-                this.genererBtn.disabled = true;
+                const actionBtn = shouldPrint ? this.imprimerBtn : this.genererBtn;
+                const otherBtn = shouldPrint ? this.genererBtn : this.imprimerBtn;
+                
+                actionBtn.textContent = 'Génération en cours...';
+                actionBtn.disabled = true;
+                otherBtn.disabled = true;
                 
                 try {
                     // Créer le conteneur pour le PDF
@@ -654,18 +726,48 @@
                     // Nettoyer
                     document.body.removeChild(pdfContainer);
                     
-                    // Télécharger le PDF
-                    const today = new Date();
-                    const dateStr = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
-                    pdf.save(`mots-carnet-${dateStr}.pdf`);
+                    // Télécharger ou imprimer le PDF
+                    if (shouldPrint) {
+                        // Utiliser le même système que les grilles d'objectifs
+                        const pdfBlob = pdf.output('blob');
+                        const pdfUrl = URL.createObjectURL(pdfBlob);
+                        
+                        // Créer une fenêtre d'impression avec le PDF
+                        const printWindow = window.open(pdfUrl, '_blank');
+                        
+                        // Attendre que le PDF soit chargé puis imprimer
+                        if (printWindow) {
+                            printWindow.onload = function() {
+                                setTimeout(function() {
+                                    printWindow.print();
+                                    // Nettoyer l'URL après impression
+                                    setTimeout(function() {
+                                        URL.revokeObjectURL(pdfUrl);
+                                    }, 1000);
+                                }, 1000);
+                            };
+                        }
+                        
+                    } else {
+                        // Télécharger le PDF
+                        const today = new Date();
+                        const dateStr = today.toISOString().split('T')[0]; // Format YYYY-MM-DD
+                        pdf.save(`mots-carnet-${dateStr}.pdf`);
+                    }
                     
                 } catch (error) {
                     console.error('Erreur lors de la génération du PDF:', error);
-                    alert('Une erreur est survenue lors de la génération du PDF.');
+                    if (shouldPrint) {
+                        alert('Erreur lors de l\'impression du PDF. Veuillez réessayer.');
+                    } else {
+                        alert('Une erreur est survenue lors de la génération du PDF.');
+                    }
                 } finally {
-                    // Restaurer le bouton
-                    this.genererBtn.textContent = 'Générer PDF';
+                    // Restaurer les boutons
+                    this.genererBtn.textContent = 'Télécharger le PDF';
+                    this.imprimerBtn.textContent = 'Imprimer le PDF';
                     this.genererBtn.disabled = false;
+                    this.imprimerBtn.disabled = false;
                 }
             }
         }
