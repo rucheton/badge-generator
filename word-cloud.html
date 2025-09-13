@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nuage de Mots - Générateur de Prénoms</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Navigation link */
+        .nav-link {
+            margin-bottom: 1rem;
+            text-align: left;
+        }
+
+        .nav-link a {
+            display: inline-block;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0.5rem 1rem;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.9);
+            transition: all 0.3s ease;
+        }
+
+        .nav-link a:hover {
+            color: white;
+            background: #667eea;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        header {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            margin-bottom: 2rem;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+
+        header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .control-panel {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            height: fit-content;
+        }
+
+        .control-panel h2 {
+            color: #2c3e50;
+            margin-bottom: 1.5rem;
+            font-size: 1.5rem;
+            border-bottom: 2px solid #ecf0f1;
+            padding-bottom: 0.5rem;
+        }
+
+        .setting-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .setting-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #555;
+        }
+
+        .setting-group input,
+        .setting-group select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .setting-group input:focus,
+        .setting-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin: 0.5rem 0.5rem 0.5rem 0;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50 0%, #45a049 100%);
+        }
+
+        .btn-success:hover {
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%);
+        }
+
+        .btn-danger:hover {
+            box-shadow: 0 4px 12px rgba(244, 67, 54, 0.3);
+        }
+
+        .spinner {
+            margin-left: 8px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .visualization-area {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 15px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            min-height: 500px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .word-cloud-container {
+            width: 100%;
+            height: 100%;
+            min-height: 400px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border: 2px dashed #dee2e6;
+        }
+
+        .word-cloud-container.has-content {
+            border: none;
+            background: white;
+        }
+
+        .word-item {
+            position: absolute;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            user-select: none;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        }
+
+        .word-item:hover {
+            transform: scale(1.1);
+            z-index: 10;
+        }
+
+        .word-item.hidden {
+            display: none;
+        }
+
+
+        .names-list {
+            max-height: 300px;
+            overflow-y: auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 1rem;
+            background: #f8f9fa;
+        }
+
+        .name-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0.5rem;
+            margin: 0.25rem 0;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #e9ecef;
+            transition: all 0.3s ease;
+        }
+
+        .name-item:hover {
+            background: #e3f2fd;
+            border-color: #2196f3;
+        }
+
+        .name-item.hidden {
+            opacity: 0.5;
+            text-decoration: line-through;
+        }
+
+        .name-item.highlighted {
+            background: #ffebee;
+            border-color: #e74c3c;
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .name-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .name-controls button {
+            padding: 0.25rem 0.5rem;
+            font-size: 0.8rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .name-controls .btn-hide {
+            background: #ffc107;
+            color: #000;
+        }
+
+        .name-controls .btn-hide:hover {
+            background: #ffb300;
+        }
+
+        .name-controls .btn-show {
+            background: #28a745;
+            color: white;
+        }
+
+        .name-controls .btn-show:hover {
+            background: #218838;
+        }
+
+        .name-controls .btn-highlight {
+            background: #e74c3c;
+            color: white;
+        }
+
+        .name-controls .btn-highlight:hover {
+            background: #c0392b;
+        }
+
+        .name-controls .btn-normal {
+            background: #6c757d;
+            color: white;
+        }
+
+        .name-controls .btn-normal:hover {
+            background: #5a6268;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin-top: 1rem;
+            padding: 1rem;
+            background: #f8f9fa;
+            border-radius: 8px;
+        }
+
+        .stat-item {
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #667eea;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #6c757d;
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+            
+            header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <div class="nav-link">
+                <a href="index.html">← Retour à l'accueil</a>
+            </div>
+            <h1>☁️ Générateur de Nuage de Mots</h1>
+            <p>Créez un nuage de mots à partir des prénoms de votre CSV</p>
+        </header>
+
+        <div class="main-content">
+            <div class="control-panel">
+                <h2>Configuration</h2>
+                
+                <div class="setting-group">
+                    <label for="csvFile">Fichier CSV :</label>
+                    <input type="file" id="csvFile" accept=".csv" />
+                    <div id="csvStatus" style="margin-top: 0.5rem; font-size: 0.9rem; color: #666;"></div>
+                </div>
+
+                <div class="setting-group">
+                    <label for="minFontSize">Taille de police minimale :</label>
+                    <input type="number" id="minFontSize" value="12" min="8" max="50" />
+                </div>
+
+                <div class="setting-group">
+                    <label for="maxFontSize">Taille de police maximale :</label>
+                    <input type="number" id="maxFontSize" value="48" min="20" max="100" />
+                </div>
+
+                <div class="setting-group">
+                    <label for="colorScheme">Schéma de couleurs :</label>
+                    <select id="colorScheme">
+                        <option value="rainbow">Arc-en-ciel</option>
+                        <option value="black">Noir</option>
+                        <option value="black-red-initial">Noir avec initiale rouge</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="textCase">Casse du texte :</label>
+                    <select id="textCase">
+                        <option value="uppercase" selected>MAJUSCULES</option>
+                        <option value="lowercase">minuscules</option>
+                        <option value="capitalized">Capitalisé</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="highlightMultiplier">Multiplicateur pour le prénom mis en avant :</label>
+                    <input type="number" id="highlightMultiplier" value="3" min="1" max="10" />
+                </div>
+
+                <div id="autoPreviewStatus" style="margin-bottom: 1rem; padding: 0.5rem; background: #e8f5e8; border-radius: 5px; font-size: 0.9rem; color: #2d5a2d; display: none;">
+                    <span id="previewStatusText">Aperçu automatique activé</span>
+                    <span id="previewSpinner" class="spinner" style="display: none; margin-left: 0.5rem;">⏳</span>
+                </div>
+
+                <button id="exportPDF" class="btn" style="display: none;">
+                    <span id="exportText">Exporter en PDF</span>
+                    <span id="exportSpinner" class="spinner" style="display: none;">⏳</span>
+                </button>
+
+                <button id="clearData" class="btn btn-danger" style="display: none;">
+                    Effacer les données
+                </button>
+
+                <div class="stats" id="stats" style="display: none;">
+                    <div class="stat-item">
+                        <div class="stat-number" id="totalNames">0</div>
+                        <div class="stat-label">Prénoms</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="visibleNames">0</div>
+                        <div class="stat-label">Visibles</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-number" id="highlightedNames">0</div>
+                        <div class="stat-label">Mis en avant</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="visualization-area">
+                <div class="word-cloud-container" id="wordCloudContainer">
+                    <div class="no-data">
+                        <h3>☁️</h3>
+                        <p>Importez un fichier CSV et générez votre nuage de mots</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="control-panel" id="namesPanel" style="display: none;">
+            <h2>Gestion des Prénoms</h2>
+            <div class="names-list" id="namesList"></div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="word-cloud.js"></script>
+</body>
+</html>

@@ -124,33 +124,23 @@ class LetterSquaresGenerator {
             return;
         }
 
-        // Generate all letters from all names
-        const allLetters = [];
-        this.names.forEach(name => {
-            const processedName = this.processText(name);
-            for (let i = 0; i < processedName.length; i++) {
-                const letter = processedName[i];
-                if (letter.trim()) { // Only add non-space characters
-                    allLetters.push(letter);
-                }
-            }
-        });
-
-        // Create letter squares
-        const squaresHTML = allLetters.map(letter => {
-            const squareSizePx = this.settings.squareSize * 37.7952755906; // Convert cm to pixels (96 DPI)
-            return `
-                <div class="letter-square" style="
-                    width: ${squareSizePx}px;
-                    height: ${squareSizePx}px;
-                    font-size: ${this.settings.fontSize}px;
-                    border-width: ${this.settings.borderWidth}px;
-                    border-color: ${this.settings.borderColor};
-                ">${letter}</div>
-            `;
+        // Calculate how many letters can fit per line
+        const lettersPerLine = this.calculateLettersPerLine();
+        
+        // Generate HTML for all names with proper line breaks
+        const allLinesHTML = this.names.map(name => {
+            const nameLines = this.splitNameIntoLines(name, lettersPerLine);
+            return nameLines.map(line => {
+                const lineLetters = line.split('').filter(letter => letter.trim());
+                const squaresHTML = lineLetters.map(letter => {
+                    const squareSizePx = this.settings.squareSize * 37.7952755906; // Convert cm to pixels (96 DPI)
+                    return `<div class="letter-square" style="width: ${squareSizePx}px; height: ${squareSizePx}px; font-size: ${this.settings.fontSize}px; border-width: ${this.settings.borderWidth}px; border-color: ${this.settings.borderColor};">${letter}</div>`;
+                }).join('');
+                return `<div class="name-line">${squaresHTML}</div>`;
+            }).join('');
         }).join('');
 
-        previewContainer.innerHTML = squaresHTML;
+        previewContainer.innerHTML = allLinesHTML;
     }
 
     processText(text) {
@@ -164,6 +154,44 @@ class LetterSquaresGenerator {
             default:
                 return text;
         }
+    }
+
+    // Calculate how many letters can fit on one line based on square size and page width
+    calculateLettersPerLine() {
+        // Use the same calculation as in generatePDF
+        const { jsPDF } = window.jspdf;
+        const tempPdf = new jsPDF('p', 'cm', 'a4');
+        const pageWidth = tempPdf.internal.pageSize.getWidth();
+        const margin = 1; // margin in cm
+        const availableWidth = pageWidth - (2 * margin);
+        const lettersPerLine = Math.floor(availableWidth / this.settings.squareSize);
+        console.log(`calculateLettersPerLine: pageWidth=${pageWidth}cm, margin=${margin}cm, availableWidth=${availableWidth}cm, squareSize=${this.settings.squareSize}cm, lettersPerLine=${lettersPerLine}`);
+        return Math.max(1, lettersPerLine); // At least 1 letter per line
+    }
+
+    // Split a name into multiple lines if it's too long
+    splitNameIntoLines(name, lettersPerLine) {
+        const processedName = this.processText(name);
+        const lines = [];
+        let currentLine = '';
+        
+        for (let i = 0; i < processedName.length; i++) {
+            const letter = processedName[i];
+            if (letter.trim()) { // Only count non-space characters
+                if (currentLine.length >= lettersPerLine) {
+                    lines.push(currentLine);
+                    currentLine = letter;
+                } else {
+                    currentLine += letter;
+                }
+            }
+        }
+        
+        if (currentLine.length > 0) {
+            lines.push(currentLine);
+        }
+        
+        return lines;
     }
 
     updateCounts() {
@@ -182,6 +210,9 @@ class LetterSquaresGenerator {
             return;
         }
 
+        // Show loading state
+        this.setLoadingState(true);
+
         try {
             // Generate PDF
             const { jsPDF } = window.jspdf;
@@ -198,42 +229,34 @@ class LetterSquaresGenerator {
             let currentPage = 0;
             let currentY = margin; // Track current Y position
 
+            // Calculate how many letters can fit per line
+            const lettersPerLine = this.calculateLettersPerLine();
+            console.log(`PDF: Letters per line: ${lettersPerLine}`);
+
             // Process each name separately
             for (let nameIndex = 0; nameIndex < this.names.length; nameIndex++) {
                 const name = this.names[nameIndex];
-                const processedName = this.processText(name);
-                const nameLetters = [];
+                const nameLines = this.splitNameIntoLines(name, lettersPerLine);
+                console.log(`PDF: Name "${name}" split into ${nameLines.length} lines:`, nameLines);
                 
-                // Extract letters from this name
-                for (let i = 0; i < processedName.length; i++) {
-                    const letter = processedName[i];
-                    if (letter.trim()) { // Only add non-space characters
-                        nameLetters.push(letter);
-                    }
-                }
-
-                // Check if we need a new page
-                if (currentY + squareSizeCm > pageHeight - margin) {
-                    pdf.addPage();
-                    currentY = margin;
-                }
-
-                // Render letters for this name
-                for (let letterIndex = 0; letterIndex < nameLetters.length; letterIndex++) {
-                    const letter = nameLetters[letterIndex];
-                    const x = margin + letterIndex * squareSizeCm;
+                // Process each line of the name
+                for (let lineIndex = 0; lineIndex < nameLines.length; lineIndex++) {
+                    const line = nameLines[lineIndex];
+                    const lineLetters = line.split('').filter(letter => letter.trim());
                     
-                    // Check if we need to wrap to next line or new page
-                    if (x + squareSizeCm > pageWidth - margin) {
-                        currentY += squareSizeCm;
-                        if (currentY + squareSizeCm > pageHeight - margin) {
-                            pdf.addPage();
-                            currentY = margin;
-                        }
+                    // Check if we need a new page for this line
+                    if (currentY + squareSizeCm > pageHeight - margin) {
+                        pdf.addPage();
+                        currentY = margin;
                     }
+
+                    // Render letters for this line
+                    for (let letterIndex = 0; letterIndex < lineLetters.length; letterIndex++) {
+                        const letter = lineLetters[letterIndex];
+                        const x = margin + letterIndex * squareSizeCm;
                     
-                    const finalX = margin + (letterIndex % squaresPerRow) * squareSizeCm;
-                    const finalY = currentY + Math.floor(letterIndex / squaresPerRow) * squareSizeCm;
+                    const finalX = x;
+                    const finalY = currentY;
                         
                     // Create a temporary container for this single letter square
                     const tempContainer = document.createElement('div');
@@ -295,10 +318,11 @@ class LetterSquaresGenerator {
 
                     // Clean up temporary container
                     document.body.removeChild(tempContainer);
+                    }
+                    
+                    // Move to next line after processing all letters in this line
+                    currentY += squareSizeCm;
                 }
-
-                // Move to next line for the next name
-                currentY += squareSizeCm;
             }
 
             // Save PDF
@@ -307,6 +331,25 @@ class LetterSquaresGenerator {
         } catch (error) {
             console.error('Error generating PDF:', error);
             alert('Error generating PDF. Please try again.');
+        } finally {
+            // Hide loading state
+            this.setLoadingState(false);
+        }
+    }
+
+    setLoadingState(isLoading) {
+        const generateBtn = document.getElementById('generatePDF');
+        const generateText = document.getElementById('generateText');
+        const generateSpinner = document.getElementById('generateSpinner');
+        
+        if (isLoading) {
+            generateBtn.disabled = true;
+            generateText.textContent = 'Generating PDF...';
+            generateSpinner.style.display = 'inline';
+        } else {
+            generateBtn.disabled = false;
+            generateText.textContent = 'Generate PDF';
+            generateSpinner.style.display = 'none';
         }
     }
 

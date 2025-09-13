@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Générateur de Grilles d'Objectifs - Maternelle</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .objectives-grid-container {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .objectives-header {
+            text-align: center;
+            margin-bottom: 30px;
+            color: white;
+        }
+
+        .objectives-header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .objectives-header p {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+
+        .objectives-form {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .objectives-form h2 {
+            margin-bottom: 25px;
+            color: #4a5568;
+            border-bottom: 2px solid #e2e8f0;
+            padding-bottom: 15px;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #4a5568;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: inherit;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .btn-generate {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .btn-generate:hover {
+            background: #5a67d8;
+            transform: translateY(-2px);
+        }
+
+        .btn-generate:disabled {
+            background: #a0aec0;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        @media (max-width: 768px) {
+            .objectives-grid-container {
+                padding: 15px;
+            }
+            
+            .objectives-header h1 {
+                font-size: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="nav-link">
+        <a href="index.html">← Retour à l'accueil</a>
+    </div>
+
+    <div class="objectives-grid-container">
+        <div class="objectives-header">
+            <h1>📋 Générateur de Grilles d'Objectifs</h1>
+            <p>Créez des grilles d'objectifs et consignes personnalisées pour votre classe de maternelle</p>
+        </div>
+
+        <div class="objectives-form">
+            <h2>Générer une grille d'objectifs</h2>
+            
+            <div class="form-group">
+                <label for="learningDomain">Domaine d'apprentissage :</label>
+                <select id="learningDomain">
+                    <option value="">Sélectionner un domaine</option>
+                    <option value="Le développement et la structuration du langage oral et écrit">Le développement et la structuration du langage oral et écrit</option>
+                    <option value="Agir, s'exprimer et comprendre à travers l'activité physique">Agir, s'exprimer et comprendre à travers l'activité physique</option>
+                    <option value="Agir, s'exprimer et comprendre à travers les activités artistiques">Agir, s'exprimer et comprendre à travers les activités artistiques</option>
+                    <option value="Acquérir les premiers outils mathématiques">Acquérir les premiers outils mathématiques</option>
+                    <option value="Explorer le monde">Explorer le monde</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="objectiveGoal">Objectif :</label>
+                <textarea id="objectiveGoal" placeholder="Décrivez l'objectif d'apprentissage..."></textarea>
+            </div>
+
+            <div class="form-group">
+                <label for="objectiveInstruction">Consigne :</label>
+                <textarea id="objectiveInstruction" placeholder="Décrivez la consigne ou l'activité..."></textarea>
+            </div>
+
+
+            <button class="btn-generate" id="generatePDF" onclick="generatePDF()">Générer le PDF</button>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="objectives-grid.js"></script>
+</body>
+</html>

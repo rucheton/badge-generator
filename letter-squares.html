@@ -13,7 +13,7 @@
 
         /* Navigation link */
         .nav-link {
-            margin-bottom: 1.5rem;
+            margin-bottom: 1rem;
             text-align: left;
         }
 
@@ -208,6 +208,34 @@
             border-color: #4CAF50;
         }
 
+        .name-line {
+            display: block;
+            margin-bottom: 10px;
+            font-size: 0; /* Supprime les espaces entre les éléments inline */
+        }
+
+        .name-line .letter-square {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: initial; /* Restaure la taille de police pour le contenu */
+        }
+
+        .spinner {
+            margin-left: 8px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
         .generate-section {
             text-align: center;
             padding: 20px;
@@ -272,6 +300,11 @@
             pointer-events: none;
         }
 
+        .name-line {
+            display: block;
+            margin-bottom: 10px;
+        }
+
         .no-names {
             color: #666;
             font-style: italic;
@@ -300,10 +333,10 @@
 </head>
 <body>
     <div class="container">
-        <div class="nav-link">
-            <a href="index.html">← Retour à l'accueil</a>
-        </div>
         <header>
+            <div class="nav-link">
+                <a href="index.html">← Retour à l'accueil</a>
+            </div>
             <h1>🔤 Générateur de Lettres à Découper</h1>
             <p>Générez des lettres individuelles dans des carrés pour découper les noms depuis un fichier CSV</p>
         </header>
@@ -355,7 +388,10 @@
                 </div>
 
                 <div class="generate-section">
-                    <button id="generatePDF" class="btn btn-success">Generate PDF</button>
+                    <button id="generatePDF" class="btn btn-success">
+                        <span id="generateText">Generate PDF</span>
+                        <span id="generateSpinner" class="spinner" style="display: none;">⏳</span>
+                    </button>
                     <div class="preview-info">
                         <span id="nameCount">0 names</span> • 
                         <span id="letterCount">0 letters</span>

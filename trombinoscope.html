@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📸 Générateur de Trombinoscope</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>📸 Générateur de Trombinoscope</h1>
+            <p>Créez un trombinoscope imprimable pour votre classe. Rendu vectoriel haute qualité !</p>
+            
+            <div class="language-selector">
+                <button class="lang-btn active" data-lang="fr">FR</button>
+                <button class="lang-btn" data-lang="en">EN</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="settings-panel">
+                <h2>Paramètres</h2>
+                
+                <div class="setting-group">
+                    <label for="photoSize">Taille des Photos (cm):</label>
+                    <input type="number" id="photoSize" value="3" min="1" max="10" step="0.5">
+                </div>
+
+                <div class="setting-group">
+                    <label for="fontSize">Taille de la Police (pt):</label>
+                    <input type="number" id="fontSize" value="12" min="8" max="24" step="1">
+                </div>
+
+                <div class="setting-group">
+                    <label for="namePosition">Position du Nom:</label>
+                    <select id="namePosition">
+                        <option value="below">Sous la photo</option>
+                        <option value="above">Au-dessus de la photo</option>
+                    </select>
+                </div>
+
+                <div class="setting-group">
+                    <label for="photosPerRow">Photos par Ligne:</label>
+                    <input type="number" id="photosPerRow" value="4" min="1" max="8" step="1">
+                </div>
+
+                <div class="setting-group">
+                    <label for="margin">Marge (cm):</label>
+                    <input type="number" id="margin" value="1" min="0.5" max="3" step="0.5">
+                </div>
+
+                <div class="setting-group">
+                    <label for="spacing">Espacement entre photos (cm):</label>
+                    <input type="number" id="spacing" value="0.5" min="0" max="2" step="0.1">
+                </div>
+
+                <div class="setting-group">
+                    <label for="showBorders">Afficher les Bordures:</label>
+                    <div class="toggle-container">
+                        <label class="toggle-label">Masquer</label>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="showBorders" checked>
+                            <span class="toggle-slider"></span>
+                        </label>
+                        <label class="toggle-label">Afficher</label>
+                    </div>
+                </div>
+
+                <div class="setting-group">
+                    <label for="borderColor">Couleur de la Bordure:</label>
+                    <input type="color" id="borderColor" value="#4CAF50">
+                </div>
+
+                <div class="setting-group">
+                    <label for="borderWidth">Épaisseur de la Bordure (pt):</label>
+                    <input type="number" id="borderWidth" value="1" min="0.5" max="5" step="0.5">
+                </div>
+            </div>
+
+            <div class="input-panel">
+                <h2>Données du Trombinoscope</h2>
+                
+                <div class="input-controls">
+                    <button id="clearAll" class="btn btn-secondary">Tout Effacer</button>
+                    <button id="importCSV" class="btn btn-primary">Importer CSV</button>
+                    <button id="addPhoto" class="btn btn-success">Ajouter Photo</button>
+                </div>
+
+                <div class="drop-zone" id="dropZone">
+                    <div class="drop-zone-content">
+                        <div class="drop-zone-icon">📸</div>
+                        <div class="drop-zone-text">
+                            <h3>Glissez-déposez des photos ici</h3>
+                            <p>ou cliquez pour sélectionner des fichiers</p>
+                            <small>Formats supportés: JPG, PNG, GIF</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="table-container">
+                    <table id="trombinoscopeTable">
+                        <thead>
+                            <tr>
+                                <th>Prénom</th>
+                                <th>Photo</th>
+                                <th>Genre</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="trombinoscopeTableBody">
+                            <tr>
+                                <td><input type="text" class="name-input" placeholder="Entrez le prénom"></td>
+                                <td>
+                                    <div class="image-input-container">
+                                        <input type="file" class="photo-input" accept="image/*">
+                                        <div class="image-preview"></div>
+                                    </div>
+                                </td>
+                                <td>
+                                    <select class="gender-select">
+                                        <option value="genderless">Sans Genre</option>
+                                        <option value="boy">Garçon</option>
+                                        <option value="girl">Fille</option>
+                                    </select>
+                                </td>
+                                <td><button class="btn btn-danger remove-row" title="Supprimer">❌</button></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="generate-section">
+                    <div class="quality-selector">
+                        <label for="qualitySelect">Qualité d'impression:</label>
+                        <select id="qualitySelect">
+                            <option value="1">Standard (72 DPI)</option>
+                            <option value="2">Haute (144 DPI)</option>
+                            <option value="4" selected>Professionnelle (300 DPI)</option>
+                        </select>
+                    </div>
+                    
+                    <button id="generatePDF" class="btn btn-success">
+                        <span id="generateText">Générer PDF</span>
+                        <span id="generateSpinner" style="display: none;">⏳</span>
+                    </button>
+                    
+                    <div class="preview-info">
+                        <div id="photoCount">0 photo</div>
+                        <div id="pageCount">1 page</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="preview-panel">
+                <h2>Aperçu</h2>
+                <div id="trombinoscopePreview" class="trombinoscope-preview">
+                    <p class="no-photos">Aucune photo à prévisualiser. Ajoutez des photos ci-dessus !</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="trombinoscope.js"></script>
+</body>
+</html>

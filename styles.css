@@ -795,3 +795,76 @@ th {
 .toggle-switch:hover .toggle-slider {
     box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
 }
+
+/* Trombinoscope specific styles */
+.trombinoscope-preview {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    padding: 20px;
+    background: #f8fafc;
+    border-radius: 10px;
+    min-height: 200px;
+    align-items: flex-start;
+}
+
+.photo-item {
+    display: inline-block;
+    margin: 5px;
+    text-align: center;
+    vertical-align: top;
+}
+
+.photo-container {
+    position: relative;
+    overflow: hidden;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.photo-preview {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+}
+
+.default-avatar-preview {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #e2e8f0;
+    font-size: 2em;
+    color: #a0aec0;
+}
+
+.photo-name {
+    font-weight: 600;
+    color: #2d3748;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-top: 5px;
+    word-wrap: break-word;
+    max-width: 100%;
+}
+
+.no-photos {
+    text-align: center;
+    color: #718096;
+    grid-column: 1/-1;
+    font-size: 16px;
+    margin: 40px 0;
+}
+
+/* Responsive adjustments for trombinoscope */
+@media (max-width: 768px) {
+    .trombinoscope-preview {
+        justify-content: center;
+    }
+    
+    .photo-item {
+        margin: 3px;
+    }
+}
