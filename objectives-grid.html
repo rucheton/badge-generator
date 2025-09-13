@@ -7,7 +7,7 @@
     <link rel="stylesheet" href="styles.css">
     <style>
         .objectives-grid-container {
-            max-width: 800px;
+            max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
@@ -34,7 +34,7 @@
             padding: 30px;
             border-radius: 15px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.1);
-            max-width: 600px;
+            max-width: 1000px;
             margin: 0 auto;
         }
 
@@ -81,28 +81,172 @@
             min-height: 100px;
         }
 
-        .btn-generate {
-            background: #667eea;
-            color: white;
-            border: none;
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .checkbox-label {
+            display: block;
+            font-weight: normal;
+            cursor: pointer;
+            padding: 15px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+            border: 1px solid #e2e8f0;
+            background-color: #fafafa;
+            text-align: left;
+        }
+
+        .checkbox-label:hover {
+            background-color: #f0f4f8;
+            border-color: #cbd5e0;
+        }
+
+        .domain-checkbox {
+            display: none;
+        }
+
+        .checkbox-label:has(input[type="checkbox"]:checked) {
+            background-color: #e8f2ff;
+            border-color: #667eea;
+            font-weight: 600;
+        }
+
+
+        .form-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .btn-generate, .btn-print {
+            flex: 1;
             padding: 15px 30px;
+            border: none;
             border-radius: 8px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
             transition: all 0.3s ease;
-            width: 100%;
+        }
+
+        .btn-generate {
+            background: #667eea;
+            color: white;
         }
 
         .btn-generate:hover {
             background: #5a67d8;
             transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
         }
 
-        .btn-generate:disabled {
+        .btn-print {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-print:hover {
+            background: #38a169;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3);
+        }
+
+        .btn-generate:disabled, .btn-print:disabled {
             background: #a0aec0;
             cursor: not-allowed;
             transform: none;
+            box-shadow: none;
+        }
+
+        .csv-list {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 12px;
+            margin-top: 8px;
+        }
+
+        .csv-item {
+            position: relative;
+            padding: 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            background-color: #f8f9fa;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        .csv-item:hover {
+            background-color: #e8f2ff;
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.15);
+        }
+
+        .csv-item.selected {
+            background-color: #e8f2ff;
+            border-color: #667eea;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+
+        .csv-checkbox {
+            display: none;
+        }
+
+        .csv-info {
+            flex: 1;
+        }
+
+        .csv-name {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 1.1em;
+            margin-bottom: 4px;
+        }
+
+        .csv-count {
+            font-size: 0.9em;
+            color: #718096;
+        }
+
+        .csv-remove {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            background: #e53e3e;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 4px 8px;
+            font-size: 0.8em;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            z-index: 10;
+        }
+
+        .csv-remove:hover {
+            background: #c53030;
+        }
+
+        .btn-clear {
+            background: #e53e3e;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9em;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn-clear:hover {
+            background: #c53030;
         }
 
         @media (max-width: 768px) {
@@ -131,15 +275,29 @@
             <h2>Générer une grille d'objectifs</h2>
             
             <div class="form-group">
-                <label for="learningDomain">Domaine d'apprentissage :</label>
-                <select id="learningDomain">
-                    <option value="">Sélectionner un domaine</option>
-                    <option value="Le développement et la structuration du langage oral et écrit">Le développement et la structuration du langage oral et écrit</option>
-                    <option value="Agir, s'exprimer et comprendre à travers l'activité physique">Agir, s'exprimer et comprendre à travers l'activité physique</option>
-                    <option value="Agir, s'exprimer et comprendre à travers les activités artistiques">Agir, s'exprimer et comprendre à travers les activités artistiques</option>
-                    <option value="Acquérir les premiers outils mathématiques">Acquérir les premiers outils mathématiques</option>
-                    <option value="Explorer le monde">Explorer le monde</option>
-                </select>
+                <label>Domaines d'apprentissage :</label>
+                <div class="checkbox-group">
+                    <label class="checkbox-label">
+                        <input type="checkbox" value="Le développement et la structuration du langage oral et écrit" class="domain-checkbox">
+                        Le développement et la structuration du langage oral et écrit
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" value="Agir, s'exprimer et comprendre à travers l'activité physique" class="domain-checkbox">
+                        Agir, s'exprimer et comprendre à travers l'activité physique
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" value="Agir, s'exprimer et comprendre à travers les activités artistiques" class="domain-checkbox">
+                        Agir, s'exprimer et comprendre à travers les activités artistiques
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" value="Acquérir les premiers outils mathématiques" class="domain-checkbox">
+                        Acquérir les premiers outils mathématiques
+                    </label>
+                    <label class="checkbox-label">
+                        <input type="checkbox" value="Explorer le monde" class="domain-checkbox">
+                        Explorer le monde
+                    </label>
+                </div>
             </div>
 
             <div class="form-group">
@@ -158,6 +316,14 @@
                 <small>Format attendu : même que badge generator (première colonne = prénom)</small>
             </div>
 
+            <div class="form-group" id="csvSelectionGroup" style="display: none;">
+                <label>CSV précédemment importés :</label>
+                <div id="csvList" class="csv-list">
+                    <!-- Les CSV importés apparaîtront ici -->
+                </div>
+                <button type="button" id="clearAllCsv" class="btn-clear" style="display: none;">Effacer tous les CSV</button>
+            </div>
+
             <div class="form-group">
                 <label for="useDate">Préremplir la date :</label>
                 <input type="date" id="useDate">
@@ -165,14 +331,16 @@
             </div>
 
             <div class="form-group">
-                <label for="previewMode">Mode de génération :</label>
-                <select id="previewMode">
-                    <option value="single">Une grille vide (mode normal)</option>
-                    <option value="csv">Une grille par prénom du CSV</option>
-                </select>
+                <label for="dateText">Date libre (optionnel) :</label>
+                <input type="text" id="dateText" placeholder="Ex: Hiver 2025, Janvier 2025, ou laissez vide">
+                <small>Texte libre pour la date (remplace la date du calendrier si rempli)</small>
             </div>
 
-            <button class="btn-generate" id="generatePDF" onclick="generatePDF()">Générer le PDF</button>
+
+            <div class="form-actions">
+                <button class="btn-generate" id="generatePDF" onclick="generatePDF()">Télécharger le PDF</button>
+                <button class="btn-print" id="printPDF" onclick="printPDF()">Imprimer le PDF</button>
+            </div>
         </div>
     </div>
 
